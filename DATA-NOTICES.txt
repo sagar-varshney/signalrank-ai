@@ -1,0 +1,10 @@
+CVE: Copyright © 1999-2026, The MITRE Corporation.
+CVE is a trademark and the CVE logo is a registered trademark of The MITRE Corporation.
+Full retained license and disclaimers accompany downloaded data in CVE-TERMS.vue.
+Designation source: CVEProject/cve-website dev/src/components/FooterModule.vue,
+retrieved 2026-10-04; its current-year expression is resolved to 2026.
+
+CISA KEV: full CC0 terms and exceptions accompany the data in KEV-LICENSE.txt.
+No endorsement by MITRE, CVE, CISA or DHS is implied.
+Keep these notices and terms with copied records. Linked third-party content
+is not included. This local collection is not approved for public release.

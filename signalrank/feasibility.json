@@ -1,0 +1,200 @@
+{
+  "mode": "real-data feasibility audit",
+  "training_enabled": false,
+  "catalog_count": 1733,
+  "catalog_version": "2026.10.02",
+  "catalog_sha256": "d2c8c6cb23291b46ff2b086197641a6b1fa35e6b746bba714cc280a1778f9e48",
+  "catalog_released": "2026-10-02T15:19:38.2945Z",
+  "additions_by_year": {
+    "2021": 311,
+    "2022": 555,
+    "2023": 187,
+    "2024": 186,
+    "2025": 245,
+    "2026": 249
+  },
+  "sample": [
+    {
+      "id": "CVE-2024-0012",
+      "selection": "KEV-selected",
+      "published": "2024-11-18T15:47:41.407000+00:00",
+      "forecast_at": "2024-11-19T15:47:41.407000+00:00",
+      "publication_to_kev_days": 0,
+      "revision": "d7f49111cf4dfabf1a72912a1a797f549fa6299c",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": "already listed or same-day ambiguous"
+    },
+    {
+      "id": "CVE-2024-0519",
+      "selection": "KEV-selected",
+      "published": "2024-01-16T21:14:49.601000+00:00",
+      "forecast_at": "2024-01-17T21:14:49.601000+00:00",
+      "publication_to_kev_days": 1,
+      "revision": "49555a74437f651da0c573c25f8334e0dc40b09a",
+      "has_text": true,
+      "has_metrics": false,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": "already listed or same-day ambiguous"
+    },
+    {
+      "id": "CVE-2024-1086",
+      "selection": "KEV-selected",
+      "published": "2024-01-31T12:14:34.073000+00:00",
+      "forecast_at": "2024-02-01T12:14:34.073000+00:00",
+      "publication_to_kev_days": 120,
+      "revision": "3579c11a5acd3352a5b5481ec63199a84f3dcab2",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-11667",
+      "selection": "KEV-selected",
+      "published": "2024-11-27T09:39:41.691000+00:00",
+      "forecast_at": "2024-11-28T09:39:41.691000+00:00",
+      "publication_to_kev_days": 6,
+      "revision": "7cc706292846eb3d47e3465c31d1ce5c63325d58",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 1
+    },
+    {
+      "id": "CVE-2024-11680",
+      "selection": "KEV-selected",
+      "published": "2024-11-26T09:55:23.588000+00:00",
+      "forecast_at": "2024-11-27T09:55:23.588000+00:00",
+      "publication_to_kev_days": 7,
+      "revision": "ea797bebf97fd59c06616751c28463816946a798",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 1
+    },
+    {
+      "id": "CVE-2024-1212",
+      "selection": "KEV-selected",
+      "published": "2024-02-21T17:39:12.599000+00:00",
+      "forecast_at": "2024-02-22T17:39:12.599000+00:00",
+      "publication_to_kev_days": 271,
+      "revision": "fa7d39b64b963b2ae0570c04eddedcbdf84a382d",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-12356",
+      "selection": "KEV-selected",
+      "published": "2024-12-17T04:29:07.883000+00:00",
+      "forecast_at": "2024-12-18T04:29:07.883000+00:00",
+      "publication_to_kev_days": 2,
+      "revision": "5bdf879c08c587f1e21aae982afcc857130ebfdf",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 1
+    },
+    {
+      "id": "CVE-2024-1709",
+      "selection": "KEV-selected",
+      "published": "2024-02-21T15:36:03.960000+00:00",
+      "forecast_at": "2024-02-22T15:36:03.960000+00:00",
+      "publication_to_kev_days": 1,
+      "revision": "aa7cef8c0ab43b722cd038bed222d87c70cc06f3",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": "already listed or same-day ambiguous"
+    },
+    {
+      "id": "CVE-2024-0013",
+      "selection": "Adjacent-ID probe",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "id": "CVE-2024-0520",
+      "selection": "Adjacent-ID probe",
+      "published": "2024-06-06T18:19:36.380000+00:00",
+      "forecast_at": "2024-06-07T18:19:36.380000+00:00",
+      "publication_to_kev_days": null,
+      "revision": "50293a37b4b71be3bdf21a8e60fe92e4aa93aa12",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-1087",
+      "selection": "Adjacent-ID probe",
+      "error": "ValueError: Record is not published"
+    },
+    {
+      "id": "CVE-2024-11668",
+      "selection": "Adjacent-ID probe",
+      "published": "2024-11-26T18:30:45.846000+00:00",
+      "forecast_at": "2024-11-27T18:30:45.846000+00:00",
+      "publication_to_kev_days": null,
+      "revision": "32e7e214f40fbdccc952790532da5023d82ed5ab",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-11681",
+      "selection": "Adjacent-ID probe",
+      "published": "2025-01-07T14:35:52.723000+00:00",
+      "forecast_at": "2025-01-08T14:35:52.723000+00:00",
+      "publication_to_kev_days": null,
+      "revision": "70429e1dcfc5b929e03171bccda1d709f3f37181",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-1213",
+      "selection": "Adjacent-ID probe",
+      "published": "2024-03-12T23:33:49.560000+00:00",
+      "forecast_at": "2024-03-13T23:33:49.560000+00:00",
+      "publication_to_kev_days": null,
+      "revision": "d80b45a820c1bfcf5a437ffc52542df683d8c2ce",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-12357",
+      "selection": "Adjacent-ID probe",
+      "published": "2024-12-09T04:31:09.257000+00:00",
+      "forecast_at": "2024-12-10T04:31:09.257000+00:00",
+      "publication_to_kev_days": null,
+      "revision": "d0b3db7dab83b98c0e8551a1d85dcf7a7672c366",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    },
+    {
+      "id": "CVE-2024-1710",
+      "selection": "Adjacent-ID probe",
+      "published": "2024-02-24T09:38:21.302000+00:00",
+      "forecast_at": "2024-02-25T09:38:21.302000+00:00",
+      "publication_to_kev_days": null,
+      "revision": "605d28ee35f679b014000ad32dbf36b0da5d4890",
+      "has_text": true,
+      "has_metrics": true,
+      "historical_status": "snapshot found; timestamp audit still required",
+      "label_30d": 0
+    }
+  ],
+  "snapshot_count": 43,
+  "sampling_warning": "Eight 2024 KEV-selected records plus adjacent-ID probes. Selection-biased diagnostic sample; no population prevalence or predictive metrics can be estimated.",
+  "decision": "Conditional feasibility only. A representative CVE cohort, historical timestamp audit, and mature labels are required before training.",
+  "generated_at": "2026-10-04T14:56:50.698220+00:00"
+}

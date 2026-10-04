@@ -1,0 +1,120 @@
+{
+  "generated_at": "2026-10-04T20:50:13.496666+00:00",
+  "training_enabled": false,
+  "checked": 16,
+  "timestamp_checks_passed": 14,
+  "label_counts": {
+    "already listed": 1,
+    "ambiguous boundary": 2,
+    "provisional negative": 8,
+    "positive": 3,
+    "excluded": 2
+  },
+  "rows": [
+    {
+      "id": "CVE-2024-0012",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "already listed"
+    },
+    {
+      "id": "CVE-2024-0519",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "ambiguous boundary"
+    },
+    {
+      "id": "CVE-2024-1086",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-11667",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "positive"
+    },
+    {
+      "id": "CVE-2024-11680",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "positive"
+    },
+    {
+      "id": "CVE-2024-1212",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-12356",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "positive"
+    },
+    {
+      "id": "CVE-2024-1709",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "ambiguous boundary"
+    },
+    {
+      "id": "CVE-2024-0013",
+      "issues": [
+        "No historical snapshot available"
+      ],
+      "timestamp_checks_passed": false,
+      "label_status": "excluded"
+    },
+    {
+      "id": "CVE-2024-0520",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-1087",
+      "issues": [
+        "No historical snapshot available"
+      ],
+      "timestamp_checks_passed": false,
+      "label_status": "excluded"
+    },
+    {
+      "id": "CVE-2024-11668",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-11681",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-1213",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-12357",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    },
+    {
+      "id": "CVE-2024-1710",
+      "issues": [],
+      "timestamp_checks_passed": true,
+      "label_status": "provisional negative"
+    }
+  ],
+  "limitations": [
+    "Git timestamps are not proof of first public availability.",
+    "Pilot is selection-biased; a full outcome-blind sampling frame is still required.",
+    "Negatives remain provisional until historical catalog membership is audited."
+  ]
+}
