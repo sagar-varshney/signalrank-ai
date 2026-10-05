@@ -20,6 +20,7 @@ function mount() { const client=new QueryClient({defaultOptions:{queries:{retry:
 beforeEach(() => {
   location.hash='#experiments';
   vi.stubGlobal('fetch',vi.fn(async (url: string) => {
+    if(url.startsWith('/api/comparison?'))return response({status:'unavailable',reason:'Older snapshot lacks complete evaluation records.',metrics:[]});
     if (url.startsWith('/api/experiments?')) { const search=new URLSearchParams(url.split('?')[1]).get('search'); return response({current_id:a.id,total:search?0:2,items:search?[]:summaries}); }
     return response(url.endsWith(a.id)?a:b);
   }));

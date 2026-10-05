@@ -17,9 +17,13 @@ import joblib
 import numpy
 import sklearn
 
-from signalrank.core import Experiment, TrainingConfig
+from signalrank.core import Experiment, TrainingConfig, generate, split
+from signalrank.diagnostics import build as diagnostics
+from signalrank.benchmark import build as benchmark
 from signalrank.history import ExperimentStore, snapshot
 from signalrank.temporal import evaluate
+
+CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py"}
 
 
 def runtime():
@@ -41,6 +45,8 @@ def train(config, root=Path("artifacts")):
     try:
         experiment = Experiment(config)
         experiment.report["temporal_evaluation"] = evaluate(config)
+        experiment.report["diagnostics"] = diagnostics(experiment)
+        experiment.report["benchmark"] = benchmark(*split(generate(config.seed, config.count)), config)
         joblib.dump(experiment, directory / "model.joblib", compress=3)
         write_json(directory / "report.json", experiment.report)
         write_json(directory / "model-card.json", {
@@ -49,10 +55,10 @@ def train(config, root=Path("artifacts")):
             "training_source": "Original fictional generator", "target": experiment.report["target"],
             "limitations": ["Synthetic generation assumptions", "Explored development windows; no final holdout", "No real-data training approval"],
         })
-        manifest = {"schema_version": 1, "runtime": runtime(), "configuration": asdict(config),
+        manifest = {"schema_version": 2, "runtime": runtime(), "configuration": asdict(config),
                     "dataset_sha256": experiment.report["dataset_sha256"],
                     "code_sha256": {name: sha256(files("signalrank").joinpath(name).read_bytes()).hexdigest()
-                                    for name in ("core.py", "temporal.py", "training.py")},
+                                    for name in sorted(CODE_FILES)},
                     "files": {name: sha256((directory / name).read_bytes()).hexdigest()
                               for name in ("model.joblib", "report.json", "model-card.json")}}
         artifact_id = sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
@@ -80,13 +86,15 @@ def load_artifact(directory, *, trusted_local=False):
     identifier = manifest.pop("artifact_id")
     if identifier != sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest() or run["artifact_id"] != identifier:
         raise ValueError("Manifest integrity check failed")
-    if manifest["schema_version"] != 1 or manifest["runtime"] != runtime():
-        raise ValueError("Artifact schema or runtime differs; recreate the original environment")
+    if manifest["schema_version"] != 2:
+        raise ValueError("Artifact schema differs; retrain locally or use its original checkout")
+    if manifest["runtime"] != runtime():
+        raise ValueError("Artifact runtime differs; recreate the original environment")
     TrainingConfig(**manifest["configuration"])
-    if set(manifest["code_sha256"]) != {"core.py", "temporal.py", "training.py"}:
+    if set(manifest["code_sha256"]) != CODE_FILES:
         raise ValueError("Incomplete training code provenance")
     for name, expected in manifest["code_sha256"].items():
-        if name not in ("core.py", "temporal.py", "training.py") or sha256(files("signalrank").joinpath(name).read_bytes()).hexdigest() != expected:
+        if name not in CODE_FILES or sha256(files("signalrank").joinpath(name).read_bytes()).hexdigest() != expected:
             raise ValueError("Training code differs from artifact; use its original checkout")
     if set(manifest["files"]) != {"model.joblib", "report.json", "model-card.json"}:
         raise ValueError("Unexpected artifact files")

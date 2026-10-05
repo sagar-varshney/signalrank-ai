@@ -14,9 +14,11 @@ import sklearn
 
 
 def snapshot(experiment):
+    from signalrank.diagnostics import evaluation_records
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "report": experiment.report,
+        "evaluation_records": evaluation_records(experiment),
         "forecasts": experiment.forecasts(100),
         "provenance": {
             "core_sha256": sha256(files("signalrank").joinpath("core.py").read_bytes()).hexdigest(),

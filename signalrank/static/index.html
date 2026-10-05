@@ -5,7 +5,16 @@
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header class="topbar"><a class="wordmark" href="/">SignalRank<span>RESEARCH TERMINAL</span></a><div class="header-controls"><span class="workspace" id="connection-status" role="status">Checking API…</span><button class="button command-trigger" id="open-command">Quick navigation <kbd>⌘ / Ctrl K</kbd></button><label class="theme-control" for="theme-choice">Appearance<select id="theme-choice"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div></header>
 <div class="layout">
-<aside><p class="nav-label">WORKSPACE / 01</p><nav aria-label="Workspace"><button data-view="overview" aria-current="page"><span aria-hidden="true">◫</span> Overview</button><button data-view="build"><span aria-hidden="true">▤</span> Dataset build</button><button data-view="data"><span aria-hidden="true">◎</span> Data &amp; validation</button><button data-view="experiments"><span aria-hidden="true">◷</span> Experiments</button><button data-view="models"><span aria-hidden="true">▥</span> Model evaluation</button><button data-view="forecasts"><span aria-hidden="true">≋</span> Forecast explorer</button></nav><div class="aside-note"><span class="badge">LOCAL RESEARCH</span><p>Generated data powers the models. Real-data training remains gated.</p><a href="/docs">API reference ↗</a></div></aside>
+<aside><p class="nav-label">WORKSPACE / 01</p><nav aria-label="Workspace">
+<button data-view="overview" aria-current="page"><span aria-hidden="true">◫</span> Overview</button>
+<button data-view="build"><span aria-hidden="true">▤</span> Dataset build</button>
+<button data-view="data"><span aria-hidden="true">◎</span> Data &amp; validation</button>
+<button data-view="experiments"><span aria-hidden="true">◷</span> Experiments</button>
+<button data-view="models"><span aria-hidden="true">▥</span> Model evaluation</button>
+<button data-view="diagnostics"><span aria-hidden="true">⊞</span> Model diagnostics</button>
+<button data-view="inference"><span aria-hidden="true">⇢</span> Batch inference</button>
+<button data-view="forecasts"><span aria-hidden="true">≋</span> Forecast explorer</button>
+</nav><div class="aside-note"><span class="badge">LOCAL RESEARCH</span><p>Generated data powers the models. Real-data training remains gated.</p><a href="/docs">API reference ↗</a></div></aside>
 <main id="main-content" tabindex="-1"><div id="status" class="error" role="status" hidden></div>
 <section id="overview" class="view">
 <div class="page-head overview-head"><div><p class="overline">WORKSPACE / OVERVIEW</p><h1>From evidence to evaluation.</h1><p>A research workbench for 30-day catalog-inclusion forecasts.</p><div class="hero-actions"><button class="button primary" data-view="experiments">Explore experiments →</button><button class="button" data-view="build">Inspect dataset</button></div></div><div class="hero-stamp"><span>BENCHMARK TARGET</span><strong>30<span> days</span></strong><p>Catalog inclusion<br>not exploitation probability</p></div></div>
@@ -44,6 +53,14 @@
 <section id="experiments" class="view" hidden>
 <div class="page-head"><div><p class="overline">RESEARCH / EXPERIMENTS</p><h1>Experiment workspace</h1><p>Compare saved results and inspect the evidence behind each model.</p></div><a class="button" href="#models">Current evaluation →</a></div>
 <div id="experiments-root"><p class="caption" role="status">Loading experiment workspace…</p><noscript>Enable JavaScript to explore experiments. <a href="/api/experiments">View snapshot summaries</a></noscript></div>
+</section>
+<section id="diagnostics" class="view" hidden>
+<div class="page-head"><div><p class="overline">MODEL LAB / DIAGNOSTICS</p><h1>Understand the failures.</h1><p>Full-cohort error analysis, calibration support and controlled architecture comparisons.</p></div><a class="button" href="/api/diagnostics" download="signalrank-diagnostics.json">Export diagnostics</a></div>
+<div id="diagnostics-root"><p class="caption" role="status">Loading diagnostics…</p><noscript>Enable JavaScript or <a href="/api/diagnostics">inspect the diagnostic JSON</a>.</noscript></div>
+</section>
+<section id="inference" class="view" hidden>
+<div class="page-head"><div><p class="overline">MODEL LAB / BATCH INFERENCE</p><h1>From model to prediction.</h1><p>Versioned fictional forecasts with a persistent, inspectable evidence trail.</p></div><a class="button" href="/api/inference/models">Trusted model register →</a></div>
+<div id="inference-root"><p class="caption" role="status">Loading batch workspace…</p><noscript>Enable JavaScript or <a href="/api/batches">inspect saved receipt summaries</a>.</noscript></div>
 </section>
 <section id="forecasts" class="view" hidden>
 <div class="page-head"><div><p class="overline">RESEARCH / FORECASTS</p><h1>Forecast explorer</h1><p>Ranked synthetic test records. Expand a record to inspect the model factors.</p></div><span class="badge warning">Synthetic records</span></div>

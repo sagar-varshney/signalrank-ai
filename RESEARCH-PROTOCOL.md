@@ -26,7 +26,19 @@ Report average precision, prevalence, Brier score, calibration-bin counts, preci
 
 `synthetic-walk-forward-v1` uses generated observations with seed/count in the run configuration. Evaluation starts at 50%, 65% and 80% of the ordered observations. Each fold calibrates on mature examples from the 120 days before its evaluation start; training labels must mature before that calibration interval. Final examples must mature by the synthetic observation end. Test windows do not overlap; later folds may train on earlier folds only after their labels mature. Review budgets are 10, 25, 50 and 100 per entire fold. Missing classes are not repaired through resampling.
 
-These synthetic windows and the existing 60/20/20 benchmark are explored development results, not an untouched final test. They test implementation, not scientific validity. Confidence intervals, statistical significance, real-data training, new cohort acquisition and historical KEV label audit are not implemented in this milestone.
+These synthetic windows and the existing 60/20/20 benchmark are explored development results, not an untouched final test. They test implementation, not scientific validity. Statistical significance, real-data training, new cohort acquisition and historical KEV label audit remain unimplemented.
+
+### Synthetic diagnostic and architecture extension
+
+Diagnostics describe the complete mature synthetic evaluation cohort. A global budget of 50 is shared across overlapping slice dimensions; slice AP/Brier are computed within groups, but captured/missed counts and recall use the global ranking. Quarter, severity, original description and remote/local groups are fixed. The display gate (30 records, five positives, five negatives) suppresses unsupported metrics; it does not establish statistical adequacy. Original generated inputs have no missing values, so no missing-data subgroup is invented.
+
+The fixed architecture contrast uses the same three unscaled numeric features for logistic regression and histogram gradient boosting (100 iterations, .05 learning rate, 15 leaves, min leaf 20, L2=1, early stopping disabled). Both fit on the same earlier training rows, then receive separate sigmoid calibration on the same subsequent calibration rows. A combined text/numeric logistic model is a reference with different inputs. No candidate is selected or tuned using evaluation results. Raw/calibrated AP, Brier, recall@50 and local fit/inference measurements are retained; benchmark candidates are not serving models.
+
+### Conditional paired interval display
+
+The exploratory `paired-moving-day-block-v1` protocol preserves paired IDs/dates/outcomes and each day's record grouping. It samples overlapping contiguous 30-day blocks from consecutive observed days, concatenates blocks and trims to the original number of days. Seed is 1729, replicates 250, interval percentiles 2.5 and 97.5. Deltas are B−A for AP, Brier and recall@50. At least 120 consecutive observed days and both outcome classes are required. One-class replicates are excluded and counted; more than 5% excluded makes the result unavailable. Mismatched or incomplete snapshots cannot produce intervals.
+
+These are conditional resampling intervals, not confirmatory confidence coverage or significance tests. Approximately stationary short-range dependence and 30-day block adequacy are unvalidated assumptions. Retraining variance, repeated entities, regime shifts and exploratory configuration selection are not accounted for. The method does not justify real-data claims or override research gates.
 
 ## Stop conditions
 

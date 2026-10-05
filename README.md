@@ -66,11 +66,11 @@ Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the databas
 - `GET /api/experiments/{id}`: complete saved report, provenance and top-100 forecasts; also the UI's JSON export.
 - `#experiments/{id}` → `#forecasts/{id}`: inspect saved context and forecast factors without replacing them with the current model's output.
 
-The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the snapshot code fingerprint covers `core.py`, not the entire repository. Separately, the offline training pipeline above saves local inference artifacts and fingerprints its three training modules.
+The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the snapshot code fingerprint covers `core.py`, not the entire repository. Separately, offline inference artifacts fingerprint six modules: core, temporal, training, diagnostics, benchmark and uncertainty. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide full-cohort uncertainty estimates.
 
 ### React experiment workspace
 
-Experiments is implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
+Experiments, Model diagnostics and Batch inference are implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
 
 Select any two snapshots, even across pages, to compare AP, Brier score and recall@50. Selections and search/page state persist in the URL. Incompatible datasets, targets, modes, horizons or evaluation partitions produce explicit reasons and suppress metric deltas. Export the comparison as JSON, inspect each snapshot's configuration, runtime and code/data fingerprints, or follow its saved forecasts. Older reports display missing configuration as unrecorded rather than inventing values. Loading, empty, missing-snapshot and retry states are explicit; late responses cannot overwrite a newly selected snapshot.
 
@@ -87,6 +87,36 @@ pnpm build
 Reload the browser after building. Tests cover comparison eligibility, URL selection, snapshot context, history search, failed-request recovery and out-of-order responses. CI runs both Python and React tests and checks that the committed bundle matches the source. The pnpm lockfile pins the frontend dependency graph; the build preserves runtime dependency licenses in `/static/react/THIRD-PARTY-NOTICES.txt`.
 
 The interface takes high-level inspiration from [QuantForge](https://quantforge-nu.vercel.app/)'s research-terminal navigation and [Dependency-Track](https://dependencytrack.org/)'s inventory-to-evidence workflows. All styling is original and local; no third-party source, logos, fonts or imagery were imported. The overview explicitly separates real-data readiness from synthetic model quality. No fake alerts, live activity or server-load statistics are displayed.
+
+## Model lab
+
+### Full-cohort diagnostics
+
+`#diagnostics` / `/api/diagnostics` analyzes the entire mature synthetic test cohort, not just top forecasts. Slice by severity, quarter, original description category or remote/local feature. AP and Brier are within-slice metrics; captured/missed counts and recall use the same globally selected top-50 review budget. Metrics require at least 30 records, five positives and five negatives: a display guard, not statistical adequacy. Dimensions overlap. Missingness is counted; the generator has no missing inputs, so no missing-data subgroup is fabricated.
+
+Error inspection shows up to 12 highest-scored selected negatives and 12 highest-scored missed positives. These are ranking-budget errors, not threshold classifications. Factors remain base-linear-model log-odds contributions, not causal explanations. Raw/calibrated reliability plots retain every bin's count in an accessible support table, including empty bins.
+
+### Fixed architecture benchmark
+
+Offline training saves `/api/benchmark`: structured logistic regression versus histogram gradient boosting on the same three unscaled numeric inputs, each raw and sigmoid-calibrated on the earlier calibration partition. Trees use 100 iterations, learning rate .05, 15 leaves, minimum leaf size 20, L2=1, early stopping disabled. Combined text-plus-structured logistic is a different-input reference, not a controlled architecture contrast. No test-based tuning or winner selection occurs. AP, Brier, recall@50, fitting/calibration time and median of three whole-test-batch inference times are recorded. Timings depend on hardware/runtime, not deployment throughput; combined fit time includes calibration. Benchmark candidate models are evaluation-only; saved combined logistic models serve inference.
+
+### Paired uncertainty
+
+`/api/comparison?a=SNAPSHOT_ID&b=SNAPSHOT_ID` provides exploratory B−A intervals. It keeps models paired on identical IDs/dates/outcomes and resamples 30-day contiguous moving blocks with all records of each day together: seed 1729, 250 resamples, 2.5th/97.5th percentiles for AP, Brier and recall@50. At least four block lengths of consecutive observed days and both outcome classes are required. More than 5% one-class resamples suppress intervals; valid counts are shown. Older incomplete snapshots and mismatched conditions are non-evaluable. The structured benchmark uses the same paired contrast.
+
+Intervals condition on fixed fitted models. Retraining variability, repeated entities, configuration search and regime shifts are not accounted for. Thirty-day block adequacy and approximately stationary short-range dependence are assumptions, not validated properties. These are not significance tests or confirmatory evidence. No bootstrap dependency was added; the original bounded implementation follows the documented [moving-block family](https://arch.readthedocs.io/en/stable/bootstrap/timeseries-bootstraps.html).
+
+### Versioned fictional batch inference
+
+`#inference` provides a strict JSON editor and generated example. `/api/inference/models` lists only artifacts explicitly trusted at startup; the browser cannot supply paths, upload models or trigger fitting. `SIGNALRANK_TRUSTED_MODEL_DIR` selects the current artifact. Additional locally created artifact directories may be allowlisted through `SIGNALRANK_TRUSTED_MODEL_DIRS`, separated by `os.pathsep` (`:` on macOS/Linux). Both variables explicitly authorize pickle deserialization: never supply third-party artifacts.
+
+Manifest schema is now v2. Older artifact directories are preserved but fail closed: retrain locally with current code or use their original checkout/environment. No silent migration or loading of incompatible artifacts occurs.
+
+`GET /api/inference/sample?seed=2026&count=20` generates original fictional inputs without labels. `POST /api/batches` requires `source: "synthetic"`, an allowlisted artifact ID, and 1–500 unique `SYN-BATCH-*` records, each containing one of five exact original descriptions, finite severity 1–10 and strict remote/authentication booleans. Extra fields, outcomes, external descriptions, invalid types and duplicate IDs are rejected. Request bodies above 256 KiB are rejected independently of Content-Length. This is not general CVE/SBOM ingestion.
+
+Successful submissions append UUID receipts to ignored `artifacts/batches.sqlite3` (override with `SIGNALRANK_BATCH_PATH`). Receipts preserve ranked outputs, original input order, timestamp, input hash, training run/artifact IDs, training-code hashes, runtime, inference-code hash and receipt checksum. They contain no invented outcomes or accuracy metrics. Each submission is a distinct execution, and mutations are not retried automatically; refresh history before resubmitting if a response is lost. `GET /api/batches` is paginated; `GET /api/batches/{id}` exports the full receipt. Back up both SQLite databases and trusted artifact directories.
+
+This is a loopback single-user workbench, not an authenticated public service. Host checks, cross-origin mutation rejection and bounded bodies are defensive measures, not a deployment security review. No update/delete API exists, but local owners can edit SQLite; checksums detect accidental changes, not malicious rewrites. All new inputs remain fictional and no source permission was expanded.
 
 ## Local feasibility audit
 
@@ -122,7 +152,7 @@ This command needs the same local license evidence as the audit and GitHub netwo
 
 Appearance can be set to Light, Dark or System from the header. It defaults to the operating-system preference and remembers an explicit choice locally; storage failures do not block the app. Both themes use shared semantic colors. Readability improvements include larger secondary text, 44px controls, visible focus indicators, a skip-to-content link, focus transfer to the active view heading, keyboard-scrollable table regions and a two-column mobile navigation. These are targeted accessibility improvements, not a full accessibility certification.
 
-The research workbench has six views: Overview, Dataset build, Data & validation, Experiments, Model evaluation and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
+The research workbench has eight views: Overview, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Batch inference and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
 
 ### Historical validation milestone
 

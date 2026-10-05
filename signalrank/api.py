@@ -3,28 +3,49 @@ from importlib.resources import files
 import json
 import os
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from signalrank.core import Experiment, registry
 from signalrank.history import ExperimentStore, snapshot
+from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sample
+from signalrank.diagnostics import build as diagnostics
+from signalrank.uncertainty import compare_snapshots
+from pathlib import Path
+from urllib.parse import urlsplit
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
 @asynccontextmanager
 async def lifespan(app):
     model_dir = os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIR")
-    if model_dir:
+    directories = list(dict.fromkeys(filter(None, [model_dir, *os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIRS", "").split(os.pathsep)])))
+    app.state.models = {}
+    for directory in directories:
         from signalrank.training import load_artifact
-        app.state.experiment = load_artifact(model_dir, trusted_local=True)
+        experiment = load_artifact(directory, trusted_local=True)
+        manifest = json.loads((Path(directory) / "manifest.json").read_text())
+        run = json.loads((Path(directory) / "run.json").read_text())
+        evidence = {"artifact_id": manifest["artifact_id"], "run_id": run["run_id"],
+                    "configuration": manifest["configuration"], "dataset_sha256": manifest["dataset_sha256"],
+                    "code_sha256": manifest["code_sha256"], "runtime": manifest["runtime"]}
+        app.state.models[manifest["artifact_id"]] = (experiment, evidence)
+    if model_dir:
+        app.state.experiment = next(iter(app.state.models.values()))[0]
     else:
         app.state.experiment = Experiment()
+    if "diagnostics" not in app.state.experiment.report:
+        app.state.experiment.report["diagnostics"] = diagnostics(app.state.experiment)
+    app.state.batches = BatchStore()
     app.state.history = ExperimentStore()
     app.state.experiment_id = app.state.history.save(snapshot(app.state.experiment))
     yield
 
 
 app = FastAPI(title="SignalRank AI", version="0.1.0", lifespan=lifespan)
+app.add_middleware(BatchBodyLimit)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]", "testserver"])
 app.mount("/static", StaticFiles(directory=str(files("signalrank").joinpath("static"))), name="static")
 
 
@@ -54,6 +75,61 @@ def experiment_snapshot(identifier: str):
 @app.get("/api/report")
 def report():
     return app.state.experiment.report
+
+
+@app.get("/api/diagnostics")
+def diagnostic_report():
+    return {"snapshot_id": app.state.experiment_id, **app.state.experiment.report["diagnostics"]}
+
+
+@app.get("/api/benchmark")
+def benchmark_report():
+    return {"snapshot_id": app.state.experiment_id, **app.state.experiment.report.get("benchmark", {
+        "items": [], "warning": "No offline benchmark loaded. Train offline and start with SIGNALRANK_TRUSTED_MODEL_DIR."})}
+
+
+@app.get("/api/comparison")
+def comparison(a: str = Query(pattern="^[a-f0-9]{64}$"), b: str = Query(pattern="^[a-f0-9]{64}$")):
+    left, right = app.state.history.get(a), app.state.history.get(b)
+    if left is None or right is None:
+        raise HTTPException(404, "Snapshot not found")
+    return {"snapshot_a": a, "snapshot_b": b, **compare_snapshots(left, right)}
+
+
+@app.get("/api/inference/models")
+def inference_models():
+    return {"items": [evidence for _, evidence in app.state.models.values()],
+            "warning": "Only artifacts explicitly trusted at server startup can be selected. No browser model upload or arbitrary path loading."}
+
+
+@app.get("/api/inference/sample")
+def inference_sample(seed: int = Query(default=2026, ge=0, le=2**32 - 1), count: int = Query(default=20, ge=1, le=500)):
+    return {"source": "synthetic", "records": sample(seed, count)}
+
+
+@app.post("/api/batches", status_code=201)
+def run_batch(body: BatchRequest, request: Request):
+    origin = request.headers.get("origin")
+    if origin and (urlsplit(origin).netloc != request.url.netloc or urlsplit(origin).scheme != request.url.scheme):
+        raise HTTPException(403, "Cross-origin batch creation is not permitted")
+    entry = app.state.models.get(body.model_id)
+    if entry is None:
+        raise HTTPException(409, "Select an artifact explicitly trusted at server startup; batch not saved")
+    experiment, evidence = entry
+    return app.state.batches.save(body, experiment, evidence)
+
+
+@app.get("/api/batches")
+def batches(limit: int = Query(default=10, ge=1, le=100), offset: int = Query(default=0, ge=0)):
+    return app.state.batches.list(limit, offset)
+
+
+@app.get("/api/batches/{identifier}")
+def batch(identifier: str):
+    receipt = app.state.batches.get(identifier)
+    if receipt is None:
+        raise HTTPException(404, "Batch receipt not found")
+    return receipt
 
 
 @app.get("/api/temporal")

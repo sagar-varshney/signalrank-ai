@@ -1,7 +1,7 @@
 const el = id => document.getElementById(id);
 const pct = x => (x * 100).toFixed(1) + '%';
 const state = { validation: [], forecasts: [], page: 0 };
-const pages = {overview: 'Overview', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', forecasts: 'Forecast explorer'};
+const pages = {overview: 'Overview', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', diagnostics: 'Model diagnostics', inference: 'Batch inference', forecasts: 'Forecast explorer'};
 let forecastRequest = 0;
 function node(tag, text, className) { const n = document.createElement(tag); n.textContent = text; if (className) n.className = className; return n; }
 async function get(path) { const r = await fetch(path); if (!r.ok) throw new Error(path + ': HTTP ' + r.status); return r.json(); }

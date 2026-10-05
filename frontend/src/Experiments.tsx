@@ -4,6 +4,7 @@ import { get } from './api';
 import { delta, incompatibilities, metricLabels } from './comparison';
 import { navigate, readRoute } from './route';
 import type { History, Snapshot } from './types';
+import { SnapshotUncertainty } from './Lab';
 
 function Table({ label, children }: { label: string; children: ReactNode }) {
   return <div className="table-wrap" tabIndex={0} role="region" aria-label={label + ', scroll horizontally if needed'}>{children}</div>;
@@ -42,6 +43,7 @@ function ComparePanel({ selected, active }: { selected: string[]; active: boolea
   return <article className="panel comparison-panel"><div className="panel-head"><div><p className="overline">COMPARE / {selected.length} OF 2 SELECTED</p><h2>Compare experiments</h2></div>{selected.length > 0 && <button className="button" onClick={() => navigate({ selected: [] })}>Clear selection</button>}</div>
     <div className="selection-slots">{[0, 1].map(i => <div className={selected[i] ? 'filled' : ''} key={i}><span>{i === 0 ? 'A' : 'B'}</span>{selected[i] ? <><div><code>{selected[i].slice(0, 12)}</code>{results[i]?.data && <p className="caption">Seed {results[i].data!.report.seed} · C {results[i].data!.report.configuration?.regularization_c ?? 'unrecorded'}</p>}</div><button aria-label={'Remove selection ' + (i === 0 ? 'A' : 'B')} onClick={() => navigate({ selected: selected.filter((_, index) => index !== i) })}>×</button></> : <p>Choose a snapshot from the table</p>}</div>)}</div>
     {error ? <ErrorState error={error} retry={() => results.forEach(q => void q.refetch())} /> : selected.length === 2 ? results.every(q => q.data) ? <Comparison left={results[0].data!} right={results[1].data!} /> : <StateMessage>Loading selected experiments…</StateMessage> : <p className="caption">Select any two snapshots, including snapshots on different pages. The selection is saved in the page URL.</p>}
+    {active && selected.length===2 && results.every(q=>q.data) && !error && <SnapshotUncertainty a={selected[0]} b={selected[1]}/>}
   </article>;
 }
 
