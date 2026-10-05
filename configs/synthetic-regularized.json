@@ -1,0 +1,6 @@
+{
+  "seed": 42,
+  "count": 3600,
+  "regularization_c": 0.5,
+  "source": "synthetic"
+}

@@ -1,23 +1,23 @@
 const el = id => document.getElementById(id);
 const pct = x => (x * 100).toFixed(1) + '%';
-const state = { validation: [], forecasts: [], page: 0, experimentOffset: 0 };
+const state = { validation: [], forecasts: [], page: 0 };
 const pages = {overview: 'Overview', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', forecasts: 'Forecast explorer'};
-let forecastRequest = 0, experimentRequest = 0;
+let forecastRequest = 0;
 function node(tag, text, className) { const n = document.createElement(tag); n.textContent = text; if (className) n.className = className; return n; }
 async function get(path) { const r = await fetch(path); if (!r.ok) throw new Error(path + ': HTTP ' + r.status); return r.json(); }
 function failure(e) { el('status').hidden = false; el('status').textContent = 'Some workspace data could not load. ' + e.message; }
 function metric(label, value, note = '') { const n = node('div', '', 'metric'); n.append(node('span', label, 'metric-label'), node('strong', String(value), 'metric-value'), node('span', note, 'metric-note')); return n; }
 function showView(route) {
-  let [name, identifier] = route.split('/');
+  const [path, query = ''] = route.split('?');
+  let [name, identifier] = path.split('/');
   if (!Object.hasOwn(pages, name)) name = 'overview';
-  ++experimentRequest;
   ++forecastRequest;
   el('status').hidden = true;
   document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== name; });
   document.querySelectorAll('nav button').forEach(b => { if (b.dataset.view === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   document.title = pages[name] + ' · SignalRank';
-  history.replaceState(null, '', '#' + name + (identifier ? '/' + identifier : ''));
-  if (name === 'experiments' && identifier) openExperiment(identifier).catch(failure);
+  history.replaceState(null, '', '#' + name + (identifier ? '/' + identifier : '') + (name === 'experiments' && query ? '?' + query : ''));
+  window.dispatchEvent(new Event('signalrank:view'));
   if (name === 'forecasts') loadForecasts(identifier).catch(failure);
 }
 document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
@@ -160,59 +160,15 @@ function updateBuildOverview() {
 }
 
 async function experimentHistory() {
-  const r = await get('/api/experiments?limit=10&offset=' + state.experimentOffset);
+  const r = await get('/api/experiments?limit=1');
   state.currentId = r.current_id;
-  el('experiment-count').textContent = r.total + ' saved snapshot' + (r.total === 1 ? '' : 's');
-  el('experiment-rows').replaceChildren();
-  for (const saved of r.items) {
-    const row = node('tr', ''), name = node('td', saved.id.slice(0, 10) + (saved.id === r.current_id ? ' · current' : ''));
-    name.append(node('span', new Date(saved.created_at).toLocaleString(), 'caption'));
-    const dataset = node('td', saved.dataset_sha256.slice(0, 10)); dataset.append(node('span', 'Synthetic · seed ' + saved.seed, 'caption'));
-    const action = node('td', ''), link = node('a', 'Inspect →'); link.href = '#experiments/' + saved.id; link.setAttribute('aria-label', 'Inspect experiment ' + saved.id.slice(0, 10)); action.append(link);
-    row.append(name, dataset, node('td', saved.model.average_precision.toFixed(3), 'numeric'), node('td', saved.model.brier_score.toFixed(3), 'numeric'), action); el('experiment-rows').append(row);
-  }
-  el('experiments-page').textContent = 'Page ' + (Math.floor(state.experimentOffset / 10) + 1) + ' of ' + Math.max(1, Math.ceil(r.total / 10));
-  el('experiments-previous').disabled = state.experimentOffset === 0; el('experiments-next').disabled = state.experimentOffset + 10 >= r.total;
-  if (state.experimentOffset === 0 && r.items.length) {
+  if (r.items.length) {
     const saved = r.items[0], summary = node('div', '', 'snapshot-summary'), text = node('div', '');
     text.append(node('strong', 'Combined model · ' + saved.id.slice(0, 10)), node('p', 'First saved ' + new Date(saved.created_at).toLocaleString() + ' · Synthetic · seed ' + saved.seed));
-    const link = node('a', 'Inspect snapshot →', 'button'); link.href = '#experiments/' + saved.id; summary.append(text, link); el('latest-experiment').replaceChildren(summary);
+    const link = node('a', 'Inspect snapshot →', 'button'); link.href = '#experiments/' + saved.id;
+    summary.append(text, link); el('latest-experiment').replaceChildren(summary);
   }
 }
-
-async function openExperiment(identifier) {
-  const request = ++experimentRequest;
-  el('experiment-detail').hidden = true;
-  let saved, current;
-  try { [saved, current] = await Promise.all([get('/api/experiments/' + encodeURIComponent(identifier)), get('/api/report')]); }
-  catch (error) { if (request !== experimentRequest) return; throw error; }
-  if (request !== experimentRequest) return;
-  el('experiment-title').textContent = 'Snapshot ' + saved.id.slice(0, 10);
-  el('experiment-export').href = '/api/experiments/' + saved.id;
-  el('experiment-forecasts').href = '#forecasts/' + saved.id;
-  el('experiment-facts').replaceChildren();
-  const facts = [
-    ['First saved', new Date(saved.created_at).toLocaleString()], ['Target', saved.report.target],
-    ['Dataset SHA-256', saved.report.dataset_sha256], ['Model code SHA-256', saved.provenance.core_sha256],
-    ['Model', saved.provenance.model], ['Runtime', 'Python ' + saved.provenance.python + ' · NumPy ' + saved.provenance.numpy + ' · scikit-learn ' + saved.provenance.scikit_learn],
-    ['Configuration', 'Seed ' + saved.report.seed + ' · ' + saved.report.horizon_days + '-day horizon'],
-    ...['train', 'calibration', 'test'].map(name => { const s = saved.report.splits[name]; return [name + ' partition', s.count + ' records · ' + s.first + ' → ' + s.last]; }),
-    ['Forecast evidence', saved.provenance.forecast_scope],
-  ];
-  for (const [label, value] of facts) el('experiment-facts').append(node('dt', label), node('dd', value));
-  const sameSplits = ['train', 'calibration', 'test'].every(name => ['count', 'first', 'last'].every(key => saved.report.splits[name]?.[key] === current.splits[name]?.[key]));
-  const comparable = saved.report.dataset_sha256 === current.dataset_sha256 && saved.report.target === current.target && saved.report.horizon_days === current.horizon_days && sameSplits;
-  el('comparison-context').textContent = comparable ? 'Same dataset fingerprint, target and temporal partitions. Deltas are current minus saved; code and runtime may differ.' : 'Different dataset, target or partitions. Results are not directly comparable; deltas are intentionally hidden.';
-  el('experiment-comparison').replaceChildren();
-  for (const [key, label] of [['average_precision', 'Average precision ↑'], ['brier_score', 'Brier score ↓'], ['recall_at_50', 'Recall at 50 ↑']]) {
-    const a = saved.report.model[key], b = current.model[key], delta = b - a;
-    const row = node('tr', ''); row.append(node('td', label), node('td', a.toFixed(4), 'numeric'), node('td', b.toFixed(4), 'numeric'), node('td', comparable ? ((delta > 0 ? '+' : '') + delta.toFixed(4)) : 'Not comparable', 'numeric')); el('experiment-comparison').append(row);
-  }
-  el('experiment-detail').hidden = false;
-  if (!el('experiments').hidden) el('experiment-title').focus();
-}
-el('experiments-previous').addEventListener('click', () => { state.experimentOffset = Math.max(0, state.experimentOffset - 10); experimentHistory().catch(failure); });
-el('experiments-next').addEventListener('click', () => { state.experimentOffset += 10; experimentHistory().catch(failure); });
 
 function commandResults() {
   const query = el('command-search').value.trim().toLowerCase();

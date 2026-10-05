@@ -39,8 +39,8 @@ def health():
 
 
 @app.get("/api/experiments")
-def experiments(limit: int = Query(default=50, ge=1, le=100), offset: int = Query(default=0, ge=0)):
-    return {"current_id": app.state.experiment_id, **app.state.history.list(limit, offset)}
+def experiments(limit: int = Query(default=50, ge=1, le=100), offset: int = Query(default=0, ge=0), search: str = Query(default="", max_length=128)):
+    return {"current_id": app.state.experiment_id, **app.state.history.list(limit, offset, search)}
 
 
 @app.get("/api/experiments/{identifier}")

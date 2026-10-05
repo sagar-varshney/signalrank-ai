@@ -51,6 +51,15 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual(len(set(identifiers)), 1)
             self.assertEqual(store.list()["total"], 1)
 
+    def test_search_matches_identifiers_and_fingerprints_literally(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ExperimentStore(Path(directory) / "runs.sqlite3")
+            identifier = store.save(self.payload)
+            self.assertEqual(store.list(search=identifier[:16])["total"], 1)
+            self.assertEqual(store.list(search=self.payload["report"]["dataset_sha256"][:16].upper())["total"], 1)
+            for search in ("missing", "' OR 1=1 --", "%"):
+                self.assertEqual(store.list(search=search)["total"], 0)
+
     def test_api_startup_persistence_and_validation(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict("os.environ", {"SIGNALRANK_HISTORY_PATH": str(Path(directory) / "runs.sqlite3")}):
             with TestClient(app) as client:

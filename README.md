@@ -62,11 +62,29 @@ Every successful app startup captures the synthetic experiment in `artifacts/exp
 
 Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the database when moving or backing up your workspace; a fresh clone creates its own history. Initialization errors fail startup rather than silently discarding history. Tests use temporary databases.
 
-- `GET /api/experiments?limit=10&offset=0`: paginated summaries and the current snapshot ID.
+- `GET /api/experiments?limit=10&offset=0&search=42`: paginated summaries and the current snapshot ID. Literal, case-insensitive search covers all saved snapshot IDs, dataset fingerprints, seeds and first-save timestamps, not just the displayed page.
 - `GET /api/experiments/{id}`: complete saved report, provenance and top-100 forecasts; also the UI's JSON export.
 - `#experiments/{id}` → `#forecasts/{id}`: inspect saved context and forecast factors without replacing them with the current model's output.
 
 The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the snapshot code fingerprint covers `core.py`, not the entire repository. Separately, the offline training pipeline above saves local inference artifacts and fingerprints its three training modules.
+
+### React experiment workspace
+
+Experiments is implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
+
+Select any two snapshots, even across pages, to compare AP, Brier score and recall@50. Selections and search/page state persist in the URL. Incompatible datasets, targets, modes, horizons or evaluation partitions produce explicit reasons and suppress metric deltas. Export the comparison as JSON, inspect each snapshot's configuration, runtime and code/data fingerprints, or follow its saved forecasts. Older reports display missing configuration as unrecorded rather than inventing values. Loading, empty, missing-snapshot and retry states are explicit; late responses cannot overwrite a newly selected snapshot.
+
+For a reproducible alternative to the baseline, run `.venv/bin/python -m signalrank.training --config configs/synthetic-regularized.json`, then refresh the library. This changes only C from 1 to 0.5 on the same fictional cohort. It demonstrates configuration comparison, not an independently validated improvement.
+
+To edit the React screen, install Node.js 24 and pnpm 11.25, then run these commands inside `frontend/`:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test
+pnpm build
+```
+
+Reload the browser after building. Tests cover comparison eligibility, URL selection, snapshot context, history search, failed-request recovery and out-of-order responses. CI runs both Python and React tests and checks that the committed bundle matches the source. The pnpm lockfile pins the frontend dependency graph; the build preserves runtime dependency licenses in `/static/react/THIRD-PARTY-NOTICES.txt`.
 
 The interface takes high-level inspiration from [QuantForge](https://quantforge-nu.vercel.app/)'s research-terminal navigation and [Dependency-Track](https://dependencytrack.org/)'s inventory-to-evidence workflows. All styling is original and local; no third-party source, logos, fonts or imagery were imported. The overview explicitly separates real-data readiness from synthetic model quality. No fake alerts, live activity or server-load statistics are displayed.
 

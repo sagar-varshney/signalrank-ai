@@ -58,10 +58,13 @@ class ExperimentStore:
             row = db.execute("SELECT id, created_at, payload FROM experiments WHERE id = ?", (identifier,)).fetchone()
         return {"id": row[0], "created_at": row[1], **json.loads(row[2])} if row else None
 
-    def list(self, limit=50, offset=0):
+    def list(self, limit=50, offset=0, search=""):
+        # Literal substring search: user input cannot become SQL or LIKE wildcards.
+        where = " WHERE instr(lower(id || ' ' || json_extract(payload, '$.report.dataset_sha256') || ' ' || json_extract(payload, '$.report.seed') || ' ' || created_at), ?) > 0"
+        parameters = (search.lower(),)
         with self.connect() as db:
-            total = db.execute("SELECT COUNT(*) FROM experiments").fetchone()[0]
-            rows = db.execute("SELECT id, created_at, payload FROM experiments ORDER BY created_at DESC, id LIMIT ? OFFSET ?", (limit, offset)).fetchall()
+            total = db.execute("SELECT COUNT(*) FROM experiments" + where, parameters).fetchone()[0]
+            rows = db.execute("SELECT id, created_at, payload FROM experiments" + where + " ORDER BY created_at DESC, id LIMIT ? OFFSET ?", (*parameters, limit, offset)).fetchall()
         items = []
         for identifier, created_at, raw in rows:
             payload = json.loads(raw)
@@ -69,5 +72,7 @@ class ExperimentStore:
             items.append({"id": identifier, "created_at": created_at,
                           "mode": report["mode"], "dataset_sha256": report["dataset_sha256"],
                           "core_sha256": payload["provenance"]["core_sha256"],
-                          "model": report["model"], "seed": report["seed"]})
+                          "model": report["model"], "seed": report["seed"],
+                          "configuration": report.get("configuration"),
+                          "temporal_windows": len(report.get("temporal_evaluation", {}).get("folds", []))})
         return {"total": total, "items": items}

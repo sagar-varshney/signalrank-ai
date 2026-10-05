@@ -30,4 +30,6 @@ The identifier inventory is pinned to an official repository commit and sampled 
 
 Pretrained models, NVD and EPSS are not approved dependencies. Before public release: verify the exact copyright designation and deployed CVE terms, retain notices, review pinned direct/transitive software and asset licenses, choose a code license, and separately review actual training/display/redistribution and deployment uses. Dependency ranges are not a lockfile.
 
+The incremental React experiment workspace uses a committed pnpm lockfile and locally served compiled assets. Its build retains the full MIT license notices for the bundled React, React DOM, Scheduler, TanStack React Query and Query Core packages in `signalrank/static/react/THIRD-PARTY-NOTICES.txt`. Build/test dependencies are pinned separately in the lockfile; this notice inventory is not a blanket public-release clearance. The migration adds no external data source, browser telemetry, hosted AI service or real-data training permission.
+
 No synthetic score may be represented as real-world accuracy. No endorsement, breach-prevention guarantee or compliance certification is implied. Public deployment and commercial use require review of the actual use and jurisdiction; disclaimers alone do not discharge obligations.
