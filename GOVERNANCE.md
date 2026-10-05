@@ -18,11 +18,15 @@ The audit checks archived license hashes, restricts download URL prefixes, caps 
 
 ## Scientific gates
 
+Reconstruction currently uses publication timestamp plus 24 hours from a pinned inventory revision as a candidate forecast cutoff. The history query is constrained to that revision's ancestry; historical publication, commit and container timestamps are checked. Naive timestamps are excluded rather than assumed UTC. All source artifacts stay local, with notices copied beside the reconstruction cache; committed/API evidence contains metadata and feature-availability counts, not raw descriptions or model-ready features. The source approval remains limited to feasibility auditing. Historical catalog changes and first-public availability remain unresolved.
+
 The target is future KEV catalog inclusion, not all exploitation or breach probability. Absence from today's catalog is only a provisional historical negative: removed entries and historical revisions need review. Current publication dates locate candidate snapshots only; corrected dates and Git commit times do not prove first public availability. Historical state, timestamp consistency and date-resolution boundaries need validation before training.
 
 The pilot uses eight KEV-selected 2024 records and eight adjacent identifiers. It is selection-biased and unsuitable for prevalence or predictive metrics. Same-day/already-listed observations are flagged; preliminary labels are not a training dataset. A representative cohort, catalog-history audit, validated cutoff times, mature outcomes and untouched temporal test interval are mandatory next gates.
 
 ## Release gates
+
+The identifier inventory is pinned to an official repository commit and sampled without consulting KEV outcomes. Frame completeness means all matching paths in the selected identifier-year Git tree, not completeness of published vulnerabilities. The inventory includes rejected records and publication years outside the identifier year. Selection does not override source-scope or training gates. Cohort API responses and committed artifacts contain identifiers and provenance, not copied CVE descriptions. Full Git/API downloads remain local under data/raw/ with evidence/cohort-download-manifest.json.
 
 Pretrained models, NVD and EPSS are not approved dependencies. Before public release: verify the exact copyright designation and deployed CVE terms, retain notices, review pinned direct/transitive software and asset licenses, choose a code license, and separately review actual training/display/redistribution and deployment uses. Dependency ranges are not a lockfile.
 

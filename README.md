@@ -44,6 +44,28 @@ Synthetic outcomes are generated from a known mathematical process. Performance 
 
 ## Next build stages
 
+### Reconstruction and evidence milestone
+
+Run `.venv/bin/python -m signalrank.reconstruct --limit 500 --workers 4` with the local source evidence, pinned catalog and cohort manifest available. Requires the GitHub CLI authenticated for read-only API requests; raw official CVE snapshots are retrieved anonymously. Four bounded workers download up to three source documents per record. Transient requests have bounded retries. URL-indexed, hash-verified evidence and per-record checkpoints live in ignored `data/raw/reconstruction/`. Successful checkpoints are reused on restart; source errors are retried. A build identity binds the cohort manifest, catalog hash and cutoff policy. Do not run two copies of the same build concurrently.
+
+The command atomically updates `signalrank/readiness.json`. The Dataset build view shows progress, candidates, exclusions and provisional labels; each record opens its timestamps, feature availability, source URLs and SHA-256 evidence. Search, status filtering and pagination run through read-only API endpoints. The browser never launches downloads or training.
+
+Current result: 500/500 processed, 428 candidates and 72 exclusions, with zero positive candidate labels and 98 candidates missing historical metrics. Exclusions include missing timezone information, unpublished records, missing publication fields, already-listed records and boundary ambiguity. Resuming from the cached evidence was verified offline. The 428 remaining labels are provisional negatives, not evidence of no exploitation.
+
+Training is still disabled. This pilot cannot support binary-model training/evaluation. Next: predeclare a larger outcome-blind frame, audit historical catalog changes and extend the source approval before real-data training. Do not enrich the sample by silently substituting KEV positives. Historical record reconstruction is implemented; complete historical label verification is not.
+
+### Identifier-frame milestone
+
+`.venv/bin/python -m signalrank.cohort` pins the official CVE repository commit, traverses its Git trees and refuses truncated, empty, duplicate or unexpected identifier inventories. It records source URLs, hashes and the deterministic seed before selecting 500 identifiers without looking at KEV outcomes. The current frame contains 39,256 CVE-2024 paths. Identifier year is not publication year; rejected records remain in the frame until explicitly audited. The resulting manifest is available at `/api/cohort`.
+
+This command needs the same local license evidence as the audit and GitHub network access. Running it again resolves a new upstream commit and may change the frame; preserve the existing manifest when comparing runs. Historical reconstruction of the selected 500 records is not implemented yet. No model is trained from this inventory.
+
+### Interface
+
+Appearance can be set to Light, Dark or System from the header. It defaults to the operating-system preference and remembers an explicit choice locally; storage failures do not block the app. Both themes use shared semantic colors. Readability improvements include larger secondary text, 44px controls, visible focus indicators, a skip-to-content link, focus transfer to the active view heading, keyboard-scrollable table regions and a two-column mobile navigation. These are targeted accessibility improvements, not a full accessibility certification.
+
+The research workbench has four views: Overview, Data & validation, Model evaluation and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence.
+
 ### Historical validation milestone
 
 Run `.venv/bin/python -m signalrank.validation` to replay the local pilot offline. It verifies cached file hashes, compares historical/current publication timestamps, checks commit and container times against the cutoff, and excludes day-resolution boundary ambiguity at either end of the forecast window. The report is served at `/api/validation` and visualized in the dashboard. All 14 available snapshots pass these checks; this does not prove first-publication availability or make the biased pilot a training cohort.

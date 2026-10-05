@@ -13,4 +13,4 @@ dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "scikit-learn>=1.5,<2",
 test = ["httpx>=0.27,<1"]
 
 [tool.setuptools.package-data]
-signalrank = ["static/*.html", "*.json"]
+signalrank = ["static/*.html", "static/*.css", "static/*.js", "*.json"]

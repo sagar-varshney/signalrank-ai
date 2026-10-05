@@ -1,9 +1,24 @@
 import unittest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from signalrank.api import app
 
 
 class ApiTests(unittest.TestCase):
+    def test_dataset_pagination_filtering_and_detail(self):
+        rows = [{"id": "CVE-2024-0012", "state": "candidate", "evidence": [{"sha256": "abc"}]}, {"id": "CVE-2024-0013", "state": "excluded", "evidence": []}]
+        with patch("signalrank.api.readiness_report", return_value={"rows": rows, "training_enabled": False}), TestClient(app) as client:
+            self.assertNotIn("rows", client.get("/api/dataset").json())
+            page = client.get("/api/dataset/records?state=candidate&limit=1").json()
+            self.assertEqual(page["total"], 1)
+            self.assertNotIn("evidence", page["items"][0])
+            self.assertEqual(client.get("/api/dataset/records?search=0013").json()["total"], 1)
+            self.assertEqual(client.get("/api/dataset/records?offset=2").json()["items"], [])
+            self.assertEqual(client.get("/api/dataset/records?limit=101").status_code, 422)
+            self.assertEqual(client.get("/api/dataset/records?state=unknown").status_code, 422)
+            self.assertEqual(client.get("/api/dataset/records/CVE-2024-0012").json()["evidence"], rows[0]["evidence"])
+            self.assertEqual(client.get("/api/dataset/records/unknown").status_code, 404)
+
     def test_startup_forecasts_and_limits(self):
         with TestClient(app) as client:
             self.assertEqual(client.get("/api/health").json()["mode"], "synthetic")
@@ -22,3 +37,13 @@ class ApiTests(unittest.TestCase):
             validation = client.get("/api/validation").json()
             self.assertFalse(validation["training_enabled"])
             self.assertLessEqual(validation["timestamp_checks_passed"], validation["checked"])
+            cohort = client.get("/api/cohort").json()
+            self.assertFalse(cohort["training_enabled"])
+            self.assertEqual(cohort["sample_count"], len(cohort["selected_ids"]))
+            self.assertEqual(client.get("/static/app.js").status_code, 200)
+            self.assertEqual(client.get("/static/theme.js").status_code, 200)
+            html = client.get("/").text
+            self.assertIn('id="theme-choice"', html)
+            self.assertIn('href="#main-content"', html)
+            self.assertIn("text/css", client.get("/static/app.css").headers["content-type"])
+            self.assertEqual(client.get("/static/../sources.json").status_code, 404)

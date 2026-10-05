@@ -26,12 +26,14 @@ def verify_evidence():
             raise ValueError(f"Changed license evidence: {name}")
 
 
-def fetch(url, log):
+def fetch(url, log, max_bytes=5_000_000):
+    if not 1 <= max_bytes <= 25_000_000:
+        raise ValueError("Invalid download size limit")
     if not url.startswith(("https://api.github.com/repos/CVEProject/", "https://raw.githubusercontent.com/CVEProject/")):
         raise ValueError("Unapproved download location")
     with urlopen(Request(url, headers={"User-Agent": "SignalRank-local-feasibility", "Accept": "application/vnd.github+json"}), timeout=30) as response:
-        body = response.read(5_000_001)
-    if len(body) > 5_000_000:
+        body = response.read(max_bytes + 1)
+    if len(body) > max_bytes:
         raise ValueError("Snapshot exceeds size limit")
     digest = sha256(body).hexdigest()
     target = RAW / f"{digest}.json"
