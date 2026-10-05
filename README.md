@@ -12,7 +12,7 @@ python3 -m venv .venv
 ```
 
 Open http://127.0.0.1:8010. API documentation is at `/docs`.
-Run `.venv/bin/python -m signalrank.core` for the reproducible JSON benchmark without the web app. Startup trains the small deterministic experiment once per process. This is development behavior; production training will be a separate job with versioned artifacts.
+Run `.venv/bin/python -m signalrank.core` for the reproducible JSON benchmark without the web app. Default demo startup trains the small deterministic experiment once per process. The offline training workflow below saves versioned artifacts and lets the app serve them without retraining.
 
 ## What is implemented
 
@@ -29,6 +29,46 @@ Run `.venv/bin/python -m signalrank.core` for the reproducible JSON benchmark wi
 - Scoped source approval, official license evidence and a real-data feasibility API.
 - Official KEV catalog audit (1,733 records) and 16-record historical CVE pilot, separate from training.
 - Redesigned responsive dashboard with evidence timeline, audit detail, navigation and downloadable findings.
+- SQLite-backed experiment snapshots with dataset/code fingerprints, runtime versions, metrics, temporal splits and the top 100 forecast explanations.
+- Snapshot-to-current metric comparisons, archived-forecast drill-downs and searchable keyboard navigation (Cmd/Ctrl+K).
+
+## Experiment history and research terminal
+
+### Offline training and temporal evaluation
+
+The application can now serve a saved local model without training at startup:
+
+```sh
+.venv/bin/python -m signalrank.training --config configs/synthetic-baseline.json
+# The command prints the artifact directory. Substitute that exact path below.
+SIGNALRANK_TRUSTED_MODEL_DIR=/absolute/path/to/artifacts/runs/RUN_ID .venv/bin/python -m uvicorn signalrank.api:app --host 127.0.0.1 --port 8010
+```
+
+Only use a model directory created by your own trusted local training command. Joblib artifacts use pickle and can execute code. Hashes detect accidental changes, not an attacker replacing the manifest and payload together. Do not accept model uploads or download and load arbitrary artifacts. The loader requires matching Python/library versions, training-code hashes, completed run status and file checksums; it fails closed on a mismatch. The environment variable is explicit authorization to deserialize that local artifact.
+
+Without this variable, the original startup-trained synthetic demo remains available. `/api/temporal` returns a clear empty-state instruction in that mode. With a trained artifact, Model evaluation shows three non-overlapping walk-forward windows, model/severity AP, Brier score and per-window review-budget results. The archived experiment report also contains full precision–recall arrays, calibration-bin counts and split/positive counts for each window. All are synthetic development results, not a final untouched benchmark.
+
+Each training execution gets its own UUID and `run.json` with configuration, start/end timestamps, success/failure and error details. Completed directories contain `model.joblib` (fitted preprocessing, classifier and calibrator), `report.json`, `model-card.json` and `manifest.json`. Artifact content fingerprints and report-snapshot IDs are separate from execution IDs. The original snapshot deduplication remains in place. Partial or failed runs cannot be loaded.
+
+`TrainingConfig` accepts synthetic source only, seed, record count (1,800–30,000) and logistic-regression C (.001–100). Unknown fields and real-data sources are rejected. Changing configurations on this explored benchmark does not produce independent confirmatory evidence. To verify reloaded forecast output:
+
+```sh
+.venv/bin/python -m signalrank.training --inspect-artifact /absolute/path/to/artifacts/runs/RUN_ID --trusted-local-artifact
+```
+
+`requirements-local.lock.txt` records the installed development versions for Python 3.13.7/macOS. It is not a hash-secured lockfile, license clearance or cross-platform reproducibility guarantee. See [RESEARCH-PROTOCOL.md](RESEARCH-PROTOCOL.md) for the study specification, scientific gates and explicit exclusions. No new official-source downloads, training permission changes, EPSS ingestion or public release occur in this milestone.
+
+Every successful app startup captures the synthetic experiment in `artifacts/experiments.sqlite3` (ignored by Git). The canonical report, forecasts and provenance determine a SHA-256 snapshot ID. Identical payloads deduplicate, preserving their first-save timestamp; changed results, core model code or runtime versions produce a distinct snapshot. This is snapshot history, not a log of every execution. Existing snapshots are never updated by the application. SQLite is local storage, not a tamper-proof audit service or a multi-user deployment.
+
+Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the database when moving or backing up your workspace; a fresh clone creates its own history. Initialization errors fail startup rather than silently discarding history. Tests use temporary databases.
+
+- `GET /api/experiments?limit=10&offset=0`: paginated summaries and the current snapshot ID.
+- `GET /api/experiments/{id}`: complete saved report, provenance and top-100 forecasts; also the UI's JSON export.
+- `#experiments/{id}` → `#forecasts/{id}`: inspect saved context and forecast factors without replacing them with the current model's output.
+
+The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the snapshot code fingerprint covers `core.py`, not the entire repository. Separately, the offline training pipeline above saves local inference artifacts and fingerprints its three training modules.
+
+The interface takes high-level inspiration from [QuantForge](https://quantforge-nu.vercel.app/)'s research-terminal navigation and [Dependency-Track](https://dependencytrack.org/)'s inventory-to-evidence workflows. All styling is original and local; no third-party source, logos, fonts or imagery were imported. The overview explicitly separates real-data readiness from synthetic model quality. No fake alerts, live activity or server-load statistics are displayed.
 
 ## Local feasibility audit
 
@@ -58,19 +98,19 @@ Training is still disabled. This pilot cannot support binary-model training/eval
 
 `.venv/bin/python -m signalrank.cohort` pins the official CVE repository commit, traverses its Git trees and refuses truncated, empty, duplicate or unexpected identifier inventories. It records source URLs, hashes and the deterministic seed before selecting 500 identifiers without looking at KEV outcomes. The current frame contains 39,256 CVE-2024 paths. Identifier year is not publication year; rejected records remain in the frame until explicitly audited. The resulting manifest is available at `/api/cohort`.
 
-This command needs the same local license evidence as the audit and GitHub network access. Running it again resolves a new upstream commit and may change the frame; preserve the existing manifest when comparing runs. Historical reconstruction of the selected 500 records is not implemented yet. No model is trained from this inventory.
+This command needs the same local license evidence as the audit and GitHub network access. Running it again resolves a new upstream commit and may change the frame; preserve the existing manifest when comparing runs. Historical reconstruction of the selected 500 records is implemented as described above; historical catalog-label auditing remains incomplete. No model is trained from this inventory.
 
 ### Interface
 
 Appearance can be set to Light, Dark or System from the header. It defaults to the operating-system preference and remembers an explicit choice locally; storage failures do not block the app. Both themes use shared semantic colors. Readability improvements include larger secondary text, 44px controls, visible focus indicators, a skip-to-content link, focus transfer to the active view heading, keyboard-scrollable table regions and a two-column mobile navigation. These are targeted accessibility improvements, not a full accessibility certification.
 
-The research workbench has four views: Overview, Data & validation, Model evaluation and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence.
+The research workbench has six views: Overview, Dataset build, Data & validation, Experiments, Model evaluation and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
 
 ### Historical validation milestone
 
 Run `.venv/bin/python -m signalrank.validation` to replay the local pilot offline. It verifies cached file hashes, compares historical/current publication timestamps, checks commit and container times against the cutoff, and excludes day-resolution boundary ambiguity at either end of the forecast window. The report is served at `/api/validation` and visualized in the dashboard. All 14 available snapshots pass these checks; this does not prove first-publication availability or make the biased pilot a training cohort.
 
-An outcome-blind, seeded hash-ranking sampler is implemented as `select_cohort`. It still needs a complete, pinned CVE sampling frame. Next: acquire and audit that frame, select the cohort without looking at KEV outcomes, reconstruct historical features, and audit catalog-history changes before generating final labels. No real-data model is trained yet.
+An outcome-blind, seeded hash-ranking sampler is implemented as `select_cohort` and has been applied to the pinned identifier frame. Next: predeclare a larger cohort and audit catalog-history changes before generating final labels. No real-data model is trained yet.
 
 ### Repository boundary
 
@@ -80,7 +120,7 @@ This project is a standalone Git repository within the larger local workspace. R
 2. Audit historical record availability and timestamp corrections; reconstruct features as known at each forecast time. Current record text must not be used to simulate past predictions.
 3. Build a real-data baseline and evaluate label prevalence, cohort bias, temporal generalization, and useful ranking lift. Stop and reassess if the target lacks enough positives or historical evidence.
 4. Compare boosted trees and licensed text encoders using ablations; keep a final untouched test interval.
-5. Add experiment tracking, versioned inference artifacts, and monitored batch forecasts.
+5. Extend the implemented experiment snapshot history with versioned inference artifacts and monitored batch forecasts.
 6. Consider grounded summaries only after model/weight/tokenizer licensing and factual-evaluation review.
 
 See [GOVERNANCE.md](GOVERNANCE.md) for current evidence and release restrictions. Existing scouting files are outside this project's implementation.

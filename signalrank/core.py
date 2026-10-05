@@ -4,6 +4,8 @@ The synthetic outcome resembles catalog inclusion, not exploitation itself.
 No public records, pretrained weights, or external network calls are used.
 """
 from datetime import date, timedelta
+from dataclasses import dataclass, asdict
+import math
 from hashlib import sha256
 import json
 from importlib.resources import files
@@ -18,6 +20,41 @@ from sklearn.preprocessing import StandardScaler
 
 HORIZON = 30
 FEATURES = ["severity", "remote", "authentication_required"]
+
+
+@dataclass(frozen=True)
+class TrainingConfig:
+    seed: int = 42
+    count: int = 3600
+    regularization_c: float = 1.0
+    source: str = "synthetic"
+
+    def __post_init__(self):
+        if self.source != "synthetic":
+            raise ValueError("Real-data training is disabled; only synthetic is permitted")
+        if type(self.seed) is not int or not 0 <= self.seed <= 2**32 - 1:
+            raise ValueError("seed must be an integer between 0 and 2**32 - 1")
+        if type(self.count) is not int or not 1800 <= self.count <= 30000:
+            raise ValueError("count must be an integer between 1800 and 30000")
+        if isinstance(self.regularization_c, bool) or not isinstance(self.regularization_c, (int, float)) or not math.isfinite(self.regularization_c) or not .001 <= self.regularization_c <= 100:
+            raise ValueError("regularization_c must be finite and between .001 and 100")
+
+
+def fitted_model(train, calibration, config):
+    for name, rows in [("train", train), ("calibration", calibration)]:
+        if not rows or len(np.unique(labels(rows))) != 2:
+            raise ValueError(f"{name} partition must contain both outcome classes")
+    model = Pipeline([
+        ("features", ColumnTransformer([
+            ("text", TfidfVectorizer(ngram_range=(1, 2)), 0),
+            ("numeric", StandardScaler(), [1, 2, 3]),
+        ])),
+        ("classifier", LogisticRegression(C=config.regularization_c, max_iter=1000, random_state=config.seed)),
+    ])
+    model.fit(matrix(train), labels(train))
+    calibrator = LogisticRegression(C=1.0, random_state=config.seed)
+    calibrator.fit(model.decision_function(matrix(calibration)).reshape(-1, 1), labels(calibration))
+    return model, calibrator
 
 
 def registry():
@@ -97,20 +134,12 @@ def reliability(y, probabilities):
 
 
 class Experiment:
-    def __init__(self):
-        rows = generate()
+    def __init__(self, config=None):
+        config = config or TrainingConfig()
+        self.config = config
+        rows = generate(seed=config.seed, count=config.count)
         train, calibration, test = split(rows)
-        self.model = Pipeline([
-            ("features", ColumnTransformer([
-                ("text", TfidfVectorizer(ngram_range=(1, 2)), 0),
-                ("numeric", StandardScaler(), [1, 2, 3]),
-            ])),
-            ("classifier", LogisticRegression(max_iter=1000, random_state=42)),
-        ])
-        self.model.fit(matrix(train), labels(train))
-        # Calibration is fitted only on the separate, later calibration interval.
-        self.calibrator = LogisticRegression(C=1.0, random_state=42)
-        self.calibrator.fit(self.model.decision_function(matrix(calibration)).reshape(-1, 1), labels(calibration))
+        self.model, self.calibrator = fitted_model(train, calibration, config)
         self.test = test
         self.probabilities = self.predict(test)
         severity = np.array([r["severity"] for r in test])
@@ -120,7 +149,7 @@ class Experiment:
             "mode": "synthetic", "target": "Simulated catalog inclusion within 30 days",
             "warning": "Synthetic benchmark; not evidence of real-world predictive value or security advice.",
             "dataset_sha256": sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest(),
-            "seed": 42, "horizon_days": HORIZON,
+            "seed": config.seed, "horizon_days": HORIZON, "configuration": asdict(config),
             "splits": {name: {"count": len(data), "first": data[0]["observed_at"], "last": data[-1]["observed_at"]} for name, data in [("train", train), ("calibration", calibration), ("test", test)]},
             "excluded_unmatured_or_embargoed": len(rows) - len(train) - len(calibration) - len(test),
             "test_prevalence": float(y.mean()), "model": metrics(y, self.probabilities),
@@ -136,7 +165,7 @@ class Experiment:
             ("Structured only", [("numeric", StandardScaler(), [1, 2, 3])]),
         ]:
             candidate = Pipeline([("features", ColumnTransformer(transforms)),
-                                  ("classifier", LogisticRegression(max_iter=1000, random_state=42))])
+                                  ("classifier", LogisticRegression(C=config.regularization_c, max_iter=1000, random_state=config.seed))])
             candidate.fit(matrix(train), labels(train))
             self.report["comparisons"].append({"name": name, **metrics(y, candidate.predict_proba(matrix(test))[:, 1])})
         constant = np.full(len(test), labels(train).mean())

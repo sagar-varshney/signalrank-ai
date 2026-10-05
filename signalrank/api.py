@@ -1,17 +1,26 @@
 from contextlib import asynccontextmanager
 from importlib.resources import files
 import json
+import os
 
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from signalrank.core import Experiment, registry
+from signalrank.history import ExperimentStore, snapshot
 
 
 @asynccontextmanager
 async def lifespan(app):
-    app.state.experiment = Experiment()
+    model_dir = os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIR")
+    if model_dir:
+        from signalrank.training import load_artifact
+        app.state.experiment = load_artifact(model_dir, trusted_local=True)
+    else:
+        app.state.experiment = Experiment()
+    app.state.history = ExperimentStore()
+    app.state.experiment_id = app.state.history.save(snapshot(app.state.experiment))
     yield
 
 
@@ -26,12 +35,31 @@ def dashboard():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "mode": "synthetic"}
+    return {"status": "ok", "mode": "synthetic", "experiment_id": app.state.experiment_id}
+
+
+@app.get("/api/experiments")
+def experiments(limit: int = Query(default=50, ge=1, le=100), offset: int = Query(default=0, ge=0)):
+    return {"current_id": app.state.experiment_id, **app.state.history.list(limit, offset)}
+
+
+@app.get("/api/experiments/{identifier}")
+def experiment_snapshot(identifier: str):
+    result = app.state.history.get(identifier)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Experiment snapshot not found")
+    return result
 
 
 @app.get("/api/report")
 def report():
     return app.state.experiment.report
+
+
+@app.get("/api/temporal")
+def temporal_report():
+    return app.state.experiment.report.get("temporal_evaluation", {
+        "mode": "synthetic", "folds": [], "warning": "No temporal run loaded. Train offline and start with SIGNALRANK_TRUSTED_MODEL_DIR to inspect it."})
 
 
 @app.get("/api/forecasts")

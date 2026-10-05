@@ -1,10 +1,19 @@
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from signalrank.api import app
 
 
 class ApiTests(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        patcher = patch.dict("os.environ", {"SIGNALRANK_HISTORY_PATH": str(Path(directory.name) / "experiments.sqlite3")})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_dataset_pagination_filtering_and_detail(self):
         rows = [{"id": "CVE-2024-0012", "state": "candidate", "evidence": [{"sha256": "abc"}]}, {"id": "CVE-2024-0013", "state": "excluded", "evidence": []}]
         with patch("signalrank.api.readiness_report", return_value={"rows": rows, "training_enabled": False}), TestClient(app) as client:
