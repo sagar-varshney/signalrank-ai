@@ -12,3 +12,5 @@ data/raw/
 evidence/
 node_modules/
 frontend/coverage/
+build/
+dist/
