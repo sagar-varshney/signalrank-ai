@@ -110,6 +110,10 @@ Reload the browser after building. Tests cover comparison eligibility, URL selec
 
 The interface takes high-level inspiration from [QuantForge](https://quantforge-nu.vercel.app/)'s research-terminal navigation and [Dependency-Track](https://dependencytrack.org/)'s inventory-to-evidence workflows. All styling is original and local; no third-party source, logos, fonts or imagery were imported. The overview explicitly separates real-data readiness from synthetic model quality. No fake alerts, live activity or server-load statistics are displayed.
 
+The editorial refresh also takes broad visual inspiration from [Penmanship](https://github.com/anvayarora/penmanship): warm ivory/charcoal palettes, restrained amber, clearer typography and less visual clutter. No Penmanship source, artwork, branding or copy is reused; its README declares no open-source license. `static/editorial.css` is our original shared stylesheet, loaded after the existing component styles. The overview's original SVG illustrates inputs → fit → calibrate → evaluate → predict, explicitly not live execution. Reduced-motion preferences stop its moving accents. All nine existing research views remain available in Workspace, Model lab and Data evidence groups; mobile navigation starts collapsed behind an accessible Browse workspace button, and quick navigation remains keyboard-accessible.
+
+Light, Dark and System modes retain the existing pre-paint theme script and local preference key. System follows operating-system changes without a reload; explicit modes remain fixed and storage failures fall back safely. A sticky header keeps appearance controls reachable. Tests execute the shipped HTML/theme/navigation scripts and check both palette definitions for primary text/action contrast; these targeted checks are not a full accessibility certification. Frontend test-only TypeScript definitions for jsdom are pinned in the pnpm lockfile; no new browser runtime dependency or external font/asset request is added.
+
 ## Model lab
 
 ### Full-cohort diagnostics

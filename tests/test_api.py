@@ -54,5 +54,10 @@ class ApiTests(unittest.TestCase):
             html = client.get("/").text
             self.assertIn('id="theme-choice"', html)
             self.assertIn('href="#main-content"', html)
+            self.assertIn('aria-controls="workspace-navigation"', html)
+            self.assertIn('id="workflow-description"', html)
+            self.assertIn('Illustrated workflow, not live activity', html)
+            self.assertIn('href="/static/editorial.css"', html)
+            self.assertEqual(client.get('/static/editorial.css').status_code, 200)
             self.assertIn("text/css", client.get("/static/app.css").headers["content-type"])
             self.assertEqual(client.get("/static/../sources.json").status_code, 404)

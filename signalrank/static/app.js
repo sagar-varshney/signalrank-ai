@@ -28,6 +28,19 @@ document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click'
 }));
 window.addEventListener('hashchange', () => { if (location.hash !== '#main-content') showView(location.hash.slice(1)); });
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); el('main-content').focus(); });
+// Collapsible mobile navigation; desktop always exposes every research route.
+const navigationMedia = window.matchMedia('(max-width: 700px)');
+let mobileNavigationOpen = false;
+function updateNavigation() {
+  const open = !navigationMedia.matches || mobileNavigationOpen;
+  el('workspace-navigation').hidden = !open;
+  el('toggle-navigation').setAttribute('aria-expanded', String(open));
+  el('toggle-navigation').textContent = open ? 'Hide navigation' : 'Browse workspace';
+}
+el('toggle-navigation').addEventListener('click', () => { mobileNavigationOpen = !mobileNavigationOpen; updateNavigation(); });
+navigationMedia.addEventListener('change', updateNavigation);
+document.querySelectorAll('#workspace-navigation [data-view]').forEach(button => button.addEventListener('click', () => { if (navigationMedia.matches) { mobileNavigationOpen = false; updateNavigation(); } }));
+updateNavigation();
 document.querySelectorAll('.table-wrap').forEach(wrap => {
   wrap.tabIndex = 0;
   wrap.setAttribute('role', 'region');
