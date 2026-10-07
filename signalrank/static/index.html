@@ -12,6 +12,7 @@
 <button data-view="experiments"><span aria-hidden="true">◷</span> Experiments</button>
 <button data-view="models"><span aria-hidden="true">▥</span> Model evaluation</button>
 <button data-view="diagnostics"><span aria-hidden="true">⊞</span> Model diagnostics</button>
+<button data-view="reliability"><span aria-hidden="true">◇</span> Model reliability</button>
 <button data-view="inference"><span aria-hidden="true">⇢</span> Batch inference</button>
 <button data-view="forecasts"><span aria-hidden="true">≋</span> Forecast explorer</button>
 </nav><div class="aside-note"><span class="badge">LOCAL RESEARCH</span><p>Generated data powers the models. Real-data training remains gated.</p><a href="/docs">API reference ↗</a></div></aside>
@@ -57,6 +58,10 @@
 <section id="diagnostics" class="view" hidden>
 <div class="page-head"><div><p class="overline">MODEL LAB / DIAGNOSTICS</p><h1>Understand the failures.</h1><p>Full-cohort error analysis, calibration support and controlled architecture comparisons.</p></div><a class="button" href="/api/diagnostics" download="signalrank-diagnostics.json">Export diagnostics</a></div>
 <div id="diagnostics-root"><p class="caption" role="status">Loading diagnostics…</p><noscript>Enable JavaScript or <a href="/api/diagnostics">inspect the diagnostic JSON</a>.</noscript></div>
+</section>
+<section id="reliability" class="view" hidden>
+<div class="page-head"><div><p class="overline">MODEL LAB / RELIABILITY</p><h1>Beyond a single score.</h1><p>Stress the assumptions. Explain model dependence. Examine the value of more history.</p></div><a class="button" href="/api/export/report" download="signalrank-experiment.md">Export research report</a></div>
+<div id="reliability-root"><p class="caption" role="status">Loading reliability evidence…</p><noscript>Enable JavaScript or <a href="/api/reliability">inspect reliability JSON</a>.</noscript></div>
 </section>
 <section id="inference" class="view" hidden>
 <div class="page-head"><div><p class="overline">MODEL LAB / BATCH INFERENCE</p><h1>From model to prediction.</h1><p>Versioned fictional forecasts with a persistent, inspectable evidence trail.</p></div><a class="button" href="/api/inference/models">Trusted model register →</a></div>

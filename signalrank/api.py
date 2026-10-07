@@ -4,7 +4,7 @@ import json
 import os
 
 from fastapi import FastAPI, Query, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from signalrank.core import Experiment, registry
@@ -12,6 +12,7 @@ from signalrank.history import ExperimentStore, snapshot
 from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sample
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
+from signalrank.reporting import markdown
 from pathlib import Path
 from urllib.parse import urlsplit
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -86,6 +87,23 @@ def diagnostic_report():
 def benchmark_report():
     return {"snapshot_id": app.state.experiment_id, **app.state.experiment.report.get("benchmark", {
         "items": [], "warning": "No offline benchmark loaded. Train offline and start with SIGNALRANK_TRUSTED_MODEL_DIR."})}
+
+
+@app.get("/api/reliability")
+def reliability_report():
+    result = app.state.experiment.report.get("reliability")
+    if result is None:
+        return {"status": "unavailable", "snapshot_id": app.state.experiment_id,
+                "warning": "No offline reliability run loaded. Run python -m signalrank.demo with your project environment. The API never fits reliability probes on request."}
+    return {"status": "available", "snapshot_id": app.state.experiment_id, **result}
+
+
+@app.get("/api/export/report")
+def export_report():
+    saved = app.state.history.get(app.state.experiment_id)
+    return Response(markdown(saved["report"], {"snapshot_id": saved["id"],
+                    "snapshot_created_at": saved["created_at"], **saved["provenance"]}),
+                    media_type="text/markdown", headers={"Content-Disposition": 'attachment; filename="signalrank-experiment.md"'})
 
 
 @app.get("/api/comparison")

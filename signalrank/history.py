@@ -27,6 +27,9 @@ def snapshot(experiment):
             "scikit_learn": sklearn.__version__,
             "model": "TF-IDF + standardized numeric features; logistic regression; sigmoid calibration",
             "forecast_scope": "Top 100 synthetic test records; base-model log-odds contributions",
+            **({"reliability_protocol": experiment.report["reliability"]["protocol"],
+                "reliability_code_sha256": sha256(files("signalrank").joinpath("reliability.py").read_bytes()).hexdigest()}
+               if "reliability" in experiment.report else {}),
         },
     }
 

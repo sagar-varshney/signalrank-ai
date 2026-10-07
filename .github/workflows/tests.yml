@@ -17,7 +17,7 @@ jobs:
         run: >-
           python -c "from pathlib import Path; from zipfile import ZipFile;
           names = ZipFile(next(Path('dist').glob('signalrank_ai-*.whl'))).namelist();
-          required = {'signalrank/diagnostics.py', 'signalrank/benchmark.py', 'signalrank/inference.py', 'signalrank/uncertainty.py', 'signalrank/static/react/experiments.js', 'signalrank/static/react/experiments.css', 'signalrank/static/react/THIRD-PARTY-NOTICES.txt'};
+          required = {'signalrank/diagnostics.py', 'signalrank/benchmark.py', 'signalrank/inference.py', 'signalrank/uncertainty.py', 'signalrank/reliability.py', 'signalrank/reporting.py', 'signalrank/demo.py', 'signalrank/static/react/experiments.js', 'signalrank/static/react/experiments.css', 'signalrank/static/react/THIRD-PARTY-NOTICES.txt'};
           assert required.issubset(names), 'Missing ML modules or compiled UI assets';
           assert all(n.startswith(('signalrank/', 'signalrank_ai-')) for n in names), 'Unexpected package contents'"
   frontend:

@@ -12601,8 +12601,781 @@ function qt() {
 	});
 }
 //#endregion
+//#region src/Reliability.tsx
+var Jt = (e) => (e * 100).toFixed(1) + "%", Yt = (e) => e === void 0 ? "Unavailable" : e.toFixed(4), Xt = (e) => (e >= 0 ? "+" : "") + e.toFixed(4), Zt = {
+	description: "Description category",
+	severity: "Severity",
+	remote: "Remote",
+	authentication_required: "Authentication required"
+};
+function Qt({ items: e, metric: t }) {
+	let n = Math.max(.001, ...e.map((e) => Math.abs(e[t])));
+	return /* @__PURE__ */ (0, b.jsxs)("svg", {
+		className: "reliability-chart",
+		viewBox: "0 0 660 228",
+		role: "img",
+		"aria-label": "Signed permutation importance; positive values mean worse performance after shuffling",
+		children: [
+			/* @__PURE__ */ (0, b.jsx)("line", {
+				x1: "420",
+				y1: "15",
+				x2: "420",
+				y2: "185",
+				stroke: "var(--control)"
+			}),
+			e.map((e, r) => {
+				let i = Math.abs(e[t]) / n * 155;
+				return /* @__PURE__ */ (0, b.jsxs)("g", { children: [/* @__PURE__ */ (0, b.jsx)("text", {
+					x: "12",
+					y: 40 + r * 42,
+					children: Zt[e.feature]
+				}), /* @__PURE__ */ (0, b.jsx)("rect", {
+					x: e[t] >= 0 ? 420 : 420 - i,
+					y: 25 + r * 42,
+					width: i,
+					height: "22",
+					rx: "2",
+					fill: e[t] >= 0 ? "var(--accent)" : "var(--muted)",
+					children: /* @__PURE__ */ (0, b.jsxs)("title", { children: [
+						Zt[e.feature],
+						": ",
+						Xt(e[t])
+					] })
+				})] }, e.feature);
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("text", {
+				x: "250",
+				y: "211",
+				textAnchor: "middle",
+				children: ["−", n.toFixed(4)]
+			}),
+			/* @__PURE__ */ (0, b.jsx)("text", {
+				x: "420",
+				y: "211",
+				textAnchor: "middle",
+				children: "0"
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("text", {
+				x: "590",
+				y: "211",
+				textAnchor: "middle",
+				children: ["+", n.toFixed(4)]
+			})
+		]
+	});
+}
+function $t({ control: e, scenario: t }) {
+	let n = [{
+		name: "Control",
+		bins: e.calibration_bins,
+		color: "var(--muted)"
+	}, {
+		name: "Selected scenario",
+		bins: t.calibration_bins,
+		color: "var(--accent)"
+	}];
+	return /* @__PURE__ */ (0, b.jsxs)("article", {
+		className: "panel",
+		children: [
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "panel-head",
+				children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+					className: "overline",
+					children: "CALIBRATION / FIXED SAVED CALIBRATOR"
+				}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Control versus selected scenario" })] }), /* @__PURE__ */ (0, b.jsx)("span", {
+					className: "caption",
+					children: t.name
+				})]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("svg", {
+				className: "reliability-chart",
+				viewBox: "0 0 540 300",
+				role: "img",
+				"aria-label": "Control and selected scenario mean predicted probability versus observed positive rate",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("path", {
+						d: "M55 25V240H510",
+						fill: "none",
+						stroke: "var(--control)"
+					}),
+					/* @__PURE__ */ (0, b.jsx)("line", {
+						x1: "55",
+						y1: "240",
+						x2: "510",
+						y2: "25",
+						stroke: "var(--muted)",
+						strokeDasharray: "5 5"
+					}),
+					[
+						0,
+						.25,
+						.5,
+						.75,
+						1
+					].map((e) => /* @__PURE__ */ (0, b.jsxs)("g", { children: [/* @__PURE__ */ (0, b.jsx)("text", {
+						x: 55 + e * 455,
+						y: "259",
+						textAnchor: "middle",
+						children: e
+					}), /* @__PURE__ */ (0, b.jsx)("text", {
+						x: "42",
+						y: 244 - e * 215,
+						textAnchor: "end",
+						children: e
+					})] }, e)),
+					n.map(({ name: e, bins: t, color: n }) => t.filter((e) => e.count && e.predicted !== null && e.observed !== null).map((t) => /* @__PURE__ */ (0, b.jsx)("circle", {
+						cx: 55 + t.predicted * 455,
+						cy: 240 - t.observed * 215,
+						r: Math.min(10, 3 + Math.log2(t.count + 1) / 2),
+						fill: n,
+						fillOpacity: ".7",
+						children: /* @__PURE__ */ (0, b.jsxs)("title", { children: [
+							e,
+							": ",
+							t.count,
+							" records; predicted ",
+							Jt(t.predicted),
+							"; observed ",
+							Jt(t.observed)
+						] })
+					}, e + t.lower))),
+					/* @__PURE__ */ (0, b.jsx)("text", {
+						x: "280",
+						y: "289",
+						textAnchor: "middle",
+						children: "Mean predicted probability"
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "plot-key",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("span", { children: "● Unchanged control" }),
+					/* @__PURE__ */ (0, b.jsx)("span", { children: "● Selected scenario" }),
+					/* @__PURE__ */ (0, b.jsx)("span", { children: "Dashed: ideal calibration" })
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "caption",
+				children: "Vertical axis: observed positive rate. Dot size reflects bin support, not confidence. Both series use the same saved calibrator. Composition scenarios have different sampled cohorts; no recalibration is performed."
+			}),
+			/* @__PURE__ */ (0, b.jsx)(jt, {
+				label: "Scenario calibration support",
+				children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+					/* @__PURE__ */ (0, b.jsx)("th", { children: "Probability bin" }),
+					/* @__PURE__ */ (0, b.jsx)("th", {
+						className: "numeric",
+						children: "Control n"
+					}),
+					/* @__PURE__ */ (0, b.jsx)("th", {
+						className: "numeric",
+						children: "Control predicted / observed"
+					}),
+					/* @__PURE__ */ (0, b.jsx)("th", {
+						className: "numeric",
+						children: "Scenario n"
+					}),
+					/* @__PURE__ */ (0, b.jsx)("th", {
+						className: "numeric",
+						children: "Scenario predicted / observed"
+					})
+				] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: e.calibration_bins.map((e, n) => {
+					let r = t.calibration_bins[n];
+					return /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+						/* @__PURE__ */ (0, b.jsxs)("td", { children: [
+							Jt(e.lower),
+							"–",
+							Jt(e.upper)
+						] }),
+						/* @__PURE__ */ (0, b.jsx)("td", {
+							className: "numeric",
+							children: e.count
+						}),
+						/* @__PURE__ */ (0, b.jsx)("td", {
+							className: "numeric",
+							children: e.predicted === null ? "No support" : Jt(e.predicted) + " / " + Jt(e.observed)
+						}),
+						/* @__PURE__ */ (0, b.jsx)("td", {
+							className: "numeric",
+							children: r.count
+						}),
+						/* @__PURE__ */ (0, b.jsx)("td", {
+							className: "numeric",
+							children: r.predicted === null ? "No support" : Jt(r.predicted) + " / " + Jt(r.observed)
+						})
+					] }, e.lower);
+				}) })] })
+			})
+		]
+	});
+}
+function en({ points: e, metric: t }) {
+	let n = e.filter((e) => e.status === "evaluated" && e.evaluation && e.training);
+	if (!n.length) return /* @__PURE__ */ (0, b.jsx)("p", {
+		className: "notice subtle",
+		children: "No supported learning-curve points in this fold."
+	});
+	let r = Math.max(1, ...e.map((e) => e.train_count)), i = Math.max(.05, ...n.flatMap((e) => [e.training[t], e.evaluation[t]])) * 1.1, a = (e) => 55 + e.train_count / r * 510, o = (e) => 235 - e / i * 195;
+	return /* @__PURE__ */ (0, b.jsxs)(b.Fragment, { children: [/* @__PURE__ */ (0, b.jsxs)("svg", {
+		className: "reliability-chart",
+		viewBox: "0 0 620 300",
+		role: "img",
+		"aria-label": "Temporal learning curve comparing in-sample training and later evaluation scores",
+		children: [
+			[
+				0,
+				.5,
+				1
+			].map((e) => /* @__PURE__ */ (0, b.jsxs)("g", { children: [/* @__PURE__ */ (0, b.jsx)("line", {
+				x1: "55",
+				y1: o(i * e),
+				x2: "565",
+				y2: o(i * e),
+				stroke: "var(--line)"
+			}), /* @__PURE__ */ (0, b.jsx)("text", {
+				x: "45",
+				y: o(i * e) + 4,
+				textAnchor: "end",
+				children: (i * e).toFixed(3)
+			})] }, e)),
+			["training", "evaluation"].map((e) => /* @__PURE__ */ (0, b.jsxs)("g", { children: [/* @__PURE__ */ (0, b.jsx)("polyline", {
+				points: n.map((n) => `${a(n)},${o(n[e][t])}`).join(" "),
+				fill: "none",
+				stroke: e === "evaluation" ? "var(--accent)" : "var(--muted)",
+				strokeWidth: "2",
+				strokeDasharray: e === "training" ? "5 4" : void 0
+			}), n.map((n) => /* @__PURE__ */ (0, b.jsx)("circle", {
+				cx: a(n),
+				cy: o(n[e][t]),
+				r: "4",
+				fill: e === "evaluation" ? "var(--accent)" : "var(--muted)",
+				children: /* @__PURE__ */ (0, b.jsxs)("title", { children: [
+					e,
+					": ",
+					n.train_count,
+					" training records, ",
+					Yt(n[e][t])
+				] })
+			}, n.fraction))] }, e)),
+			e.map((e) => /* @__PURE__ */ (0, b.jsx)("text", {
+				x: a(e),
+				y: "260",
+				textAnchor: "middle",
+				children: e.train_count
+			}, e.fraction)),
+			/* @__PURE__ */ (0, b.jsx)("text", {
+				x: "310",
+				y: "287",
+				textAnchor: "middle",
+				children: "Historical training records"
+			})
+		]
+	}), /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "plot-key",
+		children: [/* @__PURE__ */ (0, b.jsx)("span", { children: "Dashed: retrospective training" }), /* @__PURE__ */ (0, b.jsx)("span", { children: "Solid: later evaluation" })]
+	})] });
+}
+function A() {
+	return /* @__PURE__ */ (0, b.jsxs)("article", {
+		className: "panel reliability-walkthrough",
+		children: [
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "panel-head",
+				children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+					className: "overline",
+					children: "REPRODUCE / NO EXTERNAL DATA"
+				}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Run it. Trace it. Explain it." })] }), /* @__PURE__ */ (0, b.jsx)("a", {
+					className: "button",
+					href: "/api/export/report",
+					download: "signalrank-experiment.md",
+					children: "Download research report"
+				})]
+			}),
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "caption",
+				children: "From an installed project environment, one command trains a new fictional run, saves the model and report, and starts this loopback-only workbench. Each run has its own artifact directory; existing runs are preserved."
+			}),
+			/* @__PURE__ */ (0, b.jsx)("pre", { children: /* @__PURE__ */ (0, b.jsxs)("code", { children: [
+				"python -m signalrank.demo",
+				"\n",
+				"# Export without starting a server:",
+				"\n",
+				"python -m signalrank.demo --no-serve"
+			] }) }),
+			/* @__PURE__ */ (0, b.jsxs)("ol", {
+				className: "reliability-pipeline",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", { children: "01" }),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: "Generate" }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "Seeded original fictional records. No downloads, uploaded datasets or pretrained weights." })
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", { children: "02" }),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: "Fit & calibrate" }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "Past-only TF-IDF and structured model; a later partition fits sigmoid calibration." })
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", { children: "03" }),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: "Evaluate & probe" }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "Mature later labels. Fixed stress cases, raw-input shuffles and temporal learning curves." })
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", { children: "04" }),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: "Save & inspect" }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "Model artifact, configuration, hashes and report. API reads offline results; the browser cannot train." })
+					] })
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("p", {
+				className: "caption",
+				children: [
+					"A fresh clone first needs Python 3.11+ and ",
+					/* @__PURE__ */ (0, b.jsx)("code", { children: "python -m pip install -e '.[test]'" }),
+					" in a virtual environment. Compiled React assets are included; Node is needed only to change the UI. Setup can download software dependencies; the demo itself makes no data-source requests. Stop the server with Ctrl+C."
+				]
+			})
+		]
+	});
+}
+function tn() {
+	let [e, t] = (0, y.useState)(() => location.hash.slice(1).split("/")[0].split("?")[0] === "reliability");
+	(0, y.useEffect)(() => {
+		let e = () => t(location.hash.slice(1).split("/")[0].split("?")[0] === "reliability");
+		return window.addEventListener("hashchange", e), window.addEventListener("signalrank:view", e), () => {
+			window.removeEventListener("hashchange", e), window.removeEventListener("signalrank:view", e);
+		};
+	}, []);
+	let n = vt({
+		queryKey: ["reliability"],
+		queryFn: ({ signal: e }) => xt("/api/reliability", e),
+		enabled: e
+	}), [r, i] = (0, y.useState)("control"), [a, o] = (0, y.useState)("average_precision_drop"), [s, c] = (0, y.useState)(1), [l, u] = (0, y.useState)("average_precision");
+	if (n.error) return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "experiment-error",
+		role: "alert",
+		children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("strong", { children: "Unable to load reliability evidence" }), /* @__PURE__ */ (0, b.jsx)("p", { children: n.error.message })] }), /* @__PURE__ */ (0, b.jsx)("button", {
+			className: "button",
+			onClick: () => void n.refetch(),
+			children: "Try again"
+		})]
+	});
+	if (!n.data) return /* @__PURE__ */ (0, b.jsx)("p", {
+		className: "experiment-empty",
+		role: "status",
+		children: "Loading offline reliability evidence…"
+	});
+	let d = n.data;
+	if (d.status === "unavailable" || !d.stress || !d.importance || !d.learning_curves) return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "lab-workspace",
+		children: [/* @__PURE__ */ (0, b.jsx)("p", {
+			className: "notice subtle",
+			children: d.warning
+		}), /* @__PURE__ */ (0, b.jsx)(A, {})]
+	});
+	let f = d.stress.items.find((e) => e.id === r) ?? d.stress.items[0], p = d.stress.items.find((e) => e.id === "control"), m = d.learning_curves.folds.find((e) => e.fold === s) ?? d.learning_curves.folds[0];
+	return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "lab-workspace reliability-workspace",
+		children: [
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "lab-intro",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("span", {
+						className: "badge warning",
+						children: "SYNTHETIC / DEVELOPMENT"
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", { children: "How does the model behave when the conditions change?" }),
+					/* @__PURE__ */ (0, b.jsx)("a", {
+						href: "#experiments/" + d.snapshot_id,
+						children: "Snapshot provenance →"
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "reliability-summary",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", {
+							className: "overline",
+							children: "FIXED STRESS CASES"
+						}),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: d.stress.items.length }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "One seed. No adaptive tuning." })
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("div", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", {
+							className: "overline",
+							children: "RAW INPUT GROUPS"
+						}),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: d.importance.items.length }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "20 shuffles per input." })
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("div", { children: [
+						/* @__PURE__ */ (0, b.jsx)("span", {
+							className: "overline",
+							children: "PAST-ONLY WINDOWS"
+						}),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: d.learning_curves.folds.length }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: "Four training sizes per fold." })
+					] })
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "01 / STRESS TESTS"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Controlled changes. Visible consequences." })] }), /* @__PURE__ */ (0, b.jsxs)("label", { children: ["Inspect scenario", /* @__PURE__ */ (0, b.jsx)("select", {
+							value: f?.id ?? "",
+							onChange: (e) => i(e.target.value),
+							children: d.stress.items.map((e) => /* @__PURE__ */ (0, b.jsx)("option", {
+								value: e.id,
+								children: e.name
+							}, e.id))
+						})] })]
+					}),
+					/* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "Robustness scenario metrics",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Scenario / type" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "n / unique / positives"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Calibrated AP ↑"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Calibrated Brier ↓"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Recall@50 ↑"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "AP change"
+							})
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: d.stress.items.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", {
+							className: e.id === f?.id ? "reliability-selected" : "",
+							children: [
+								/* @__PURE__ */ (0, b.jsxs)("td", { children: [/* @__PURE__ */ (0, b.jsx)("button", {
+									className: "row-link",
+									onClick: () => i(e.id),
+									"aria-label": "Inspect " + e.name,
+									children: e.name
+								}), /* @__PURE__ */ (0, b.jsx)("span", {
+									className: "caption",
+									children: e.kind
+								})] }),
+								/* @__PURE__ */ (0, b.jsxs)("td", {
+									className: "numeric",
+									children: [
+										e.support.count,
+										" / ",
+										e.support.unique_records,
+										" / ",
+										e.support.positives
+									]
+								}),
+								/* @__PURE__ */ (0, b.jsx)("td", {
+									className: "numeric",
+									children: Yt(e.calibrated?.average_precision)
+								}),
+								/* @__PURE__ */ (0, b.jsx)("td", {
+									className: "numeric",
+									children: Yt(e.calibrated?.brier_score)
+								}),
+								/* @__PURE__ */ (0, b.jsx)("td", {
+									className: "numeric",
+									children: e.calibrated ? Jt(e.calibrated.recall_at_50) : "Unavailable"
+								}),
+								/* @__PURE__ */ (0, b.jsx)("td", {
+									className: "numeric",
+									children: e.delta_from_control ? Xt(e.delta_from_control.average_precision) : "Unavailable"
+								})
+							]
+						}, e.id)) })] })
+					}),
+					f && /* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "reliability-detail",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, b.jsxs)("span", {
+								className: "overline",
+								children: [
+									f.kind.toUpperCase(),
+									" / SEED ",
+									d.stress.seed
+								]
+							}),
+							/* @__PURE__ */ (0, b.jsx)("h3", { children: f.name }),
+							/* @__PURE__ */ (0, b.jsx)("p", { children: f.definition }),
+							f.reason && /* @__PURE__ */ (0, b.jsx)("p", {
+								role: "status",
+								children: f.reason
+							}),
+							/* @__PURE__ */ (0, b.jsxs)("p", {
+								className: "caption",
+								children: [
+									"Mean severity ",
+									f.support.mean_severity.toFixed(2),
+									" · remote measurements ",
+									Jt(f.support.remote_rate),
+									" · positive prevalence ",
+									Jt(f.support.prevalence),
+									". Outcomes are retained, never regenerated."
+								]
+							}),
+							/* @__PURE__ */ (0, b.jsxs)("p", {
+								className: "caption",
+								children: [
+									"Raw AP ",
+									Yt(f.raw?.average_precision),
+									" · raw Brier ",
+									Yt(f.raw?.brier_score),
+									"."
+								]
+							})
+						] }), /* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("span", {
+							className: "overline",
+							children: "COMPOSITION / RECORD COUNTS"
+						}), Object.entries(f.support.categories).map(([e, t]) => /* @__PURE__ */ (0, b.jsxs)("div", {
+							className: "composition-row",
+							children: [/* @__PURE__ */ (0, b.jsx)("span", { children: e }), /* @__PURE__ */ (0, b.jsx)("strong", { children: t })]
+						}, e))] })]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: d.stress.warning
+					})
+				]
+			}),
+			f?.calibration_bins && p?.calibration_bins && /* @__PURE__ */ (0, b.jsx)($t, {
+				control: p,
+				scenario: f
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "02 / MODEL DEPENDENCE"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Which inputs does the model rely on?" })] }), /* @__PURE__ */ (0, b.jsxs)("label", { children: ["Importance measure", /* @__PURE__ */ (0, b.jsxs)("select", {
+							value: a,
+							onChange: (e) => o(e.target.value),
+							children: [/* @__PURE__ */ (0, b.jsx)("option", {
+								value: "average_precision_drop",
+								children: "Average precision drop"
+							}), /* @__PURE__ */ (0, b.jsx)("option", {
+								value: "brier_increase",
+								children: "Brier score increase"
+							})]
+						})] })]
+					}),
+					d.importance.status === "unavailable" ? /* @__PURE__ */ (0, b.jsx)("p", {
+						className: "notice subtle",
+						children: d.importance.reason
+					}) : /* @__PURE__ */ (0, b.jsxs)(b.Fragment, { children: [/* @__PURE__ */ (0, b.jsx)(Qt, {
+						items: d.importance.items,
+						metric: a
+					}), /* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "Global permutation importance",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Raw input group" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Mean AP drop"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Shuffle SD"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Mean Brier increase"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Shuffle SD"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Repeats"
+							})
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: d.importance.items.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: Zt[e.feature] }),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: Xt(e.average_precision_drop)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: Yt(e.average_precision_drop_sd)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: Xt(e.brier_increase)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: Yt(e.brier_increase_sd)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: e.repeats
+							})
+						] }, e.feature)) })] })
+					})] }),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: d.importance.warning
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "03 / DATA VOLUME & TIME"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Does more history help?" })] }), /* @__PURE__ */ (0, b.jsxs)("div", {
+							className: "reliability-controls",
+							children: [/* @__PURE__ */ (0, b.jsxs)("label", { children: ["Temporal fold", /* @__PURE__ */ (0, b.jsx)("select", {
+								value: m?.fold ?? 1,
+								onChange: (e) => c(Number(e.target.value)),
+								children: d.learning_curves.folds.map((e) => /* @__PURE__ */ (0, b.jsxs)("option", {
+									value: e.fold,
+									children: ["Fold ", e.fold]
+								}, e.fold))
+							})] }), /* @__PURE__ */ (0, b.jsxs)("label", { children: ["Curve metric", /* @__PURE__ */ (0, b.jsxs)("select", {
+								value: l,
+								onChange: (e) => u(e.target.value),
+								children: [
+									/* @__PURE__ */ (0, b.jsx)("option", {
+										value: "average_precision",
+										children: "Average precision ↑"
+									}),
+									/* @__PURE__ */ (0, b.jsx)("option", {
+										value: "brier_score",
+										children: "Brier score ↓"
+									}),
+									/* @__PURE__ */ (0, b.jsx)("option", {
+										value: "recall_at_50",
+										children: "Recall at 50 ↑"
+									})
+								]
+							})] })]
+						})]
+					}),
+					m && /* @__PURE__ */ (0, b.jsxs)(b.Fragment, { children: [
+						/* @__PURE__ */ (0, b.jsxs)("p", {
+							className: "caption",
+							children: [
+								"Fixed later calibration: ",
+								m.calibration.count,
+								" records, ",
+								m.calibration.positives,
+								" positives. Mature evaluation: ",
+								m.evaluation_first,
+								" to ",
+								m.evaluation_last,
+								", ",
+								m.evaluation.count,
+								" records, ",
+								m.evaluation.positives,
+								" positives."
+							]
+						}),
+						/* @__PURE__ */ (0, b.jsx)(en, {
+							points: m.points,
+							metric: l
+						}),
+						/* @__PURE__ */ (0, b.jsx)(jt, {
+							label: "Temporal learning curve evidence",
+							children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Training days / support" }),
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Training period" }),
+								/* @__PURE__ */ (0, b.jsx)("th", {
+									className: "numeric",
+									children: "In-sample score"
+								}),
+								/* @__PURE__ */ (0, b.jsx)("th", {
+									className: "numeric",
+									children: "Later evaluation score"
+								}),
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Evidence status" })
+							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: m.points.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+								/* @__PURE__ */ (0, b.jsxs)("td", { children: [Jt(e.fraction), /* @__PURE__ */ (0, b.jsxs)("span", {
+									className: "caption",
+									children: [
+										e.train_count,
+										" records · ",
+										e.train_positives,
+										" positives"
+									]
+								})] }),
+								/* @__PURE__ */ (0, b.jsxs)("td", { children: [e.train_first, /* @__PURE__ */ (0, b.jsxs)("span", {
+									className: "caption",
+									children: ["to ", e.train_last]
+								})] }),
+								/* @__PURE__ */ (0, b.jsx)("td", {
+									className: "numeric",
+									children: Yt(e.training?.[l])
+								}),
+								/* @__PURE__ */ (0, b.jsx)("td", {
+									className: "numeric",
+									children: Yt(e.evaluation?.[l])
+								}),
+								/* @__PURE__ */ (0, b.jsxs)("td", { children: [e.status, e.reason && /* @__PURE__ */ (0, b.jsx)("span", {
+									className: "caption",
+									children: e.reason
+								})] })
+							] }, e.fraction)) })] })
+						})
+					] }),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: d.learning_curves.warning
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsx)(A, {}),
+			/* @__PURE__ */ (0, b.jsxs)("details", {
+				className: "panel provenance-details",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("summary", { children: "Protocol, configuration and full evidence" }),
+					/* @__PURE__ */ (0, b.jsxs)("p", { children: ["Protocol: ", /* @__PURE__ */ (0, b.jsx)("code", { children: d.protocol })] }),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: ["Dataset SHA-256: ", d.dataset_sha256]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("pre", { children: JSON.stringify(d.configuration, null, 2) }),
+					/* @__PURE__ */ (0, b.jsx)("a", {
+						href: "/api/reliability",
+						download: "signalrank-reliability.json",
+						children: "Download complete reliability JSON →"
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "caption",
+				children: d.warning
+			})
+		]
+	});
+}
+//#endregion
 //#region src/main.tsx
-var Jt = class extends y.Component {
+var nn = class extends y.Component {
 	state = { failed: !1 };
 	static getDerivedStateFromError() {
 		return { failed: !0 };
@@ -12618,18 +13391,22 @@ var Jt = class extends y.Component {
 			})]
 		}) : this.props.children;
 	}
-}, Yt = new it({ defaultOptions: { queries: {
+}, rn = new it({ defaultOptions: { queries: {
 	retry: !1,
 	refetchOnWindowFocus: !1
-} } }), Xt = document.getElementById("experiments-root");
-Xt && (0, bt.createRoot)(Xt).render(/* @__PURE__ */ (0, b.jsx)(Jt, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-	client: Yt,
+} } }), an = document.getElementById("experiments-root");
+an && (0, bt.createRoot)(an).render(/* @__PURE__ */ (0, b.jsx)(nn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+	client: rn,
 	children: /* @__PURE__ */ (0, b.jsx)(qt, {})
 }) }));
-for (let [e, t] of [["diagnostics-root", Rt], ["inference-root", Vt]]) {
+for (let [e, t] of [
+	["diagnostics-root", Rt],
+	["inference-root", Vt],
+	["reliability-root", tn]
+]) {
 	let n = document.getElementById(e);
-	n && (0, bt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(Jt, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-		client: Yt,
+	n && (0, bt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(nn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+		client: rn,
 		children: /* @__PURE__ */ (0, b.jsx)(t, {})
 	}) }));
 }

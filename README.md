@@ -66,11 +66,33 @@ Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the databas
 - `GET /api/experiments/{id}`: complete saved report, provenance and top-100 forecasts; also the UI's JSON export.
 - `#experiments/{id}` → `#forecasts/{id}`: inspect saved context and forecast factors without replacing them with the current model's output.
 
-The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the snapshot code fingerprint covers `core.py`, not the entire repository. Separately, offline inference artifacts fingerprint six modules: core, temporal, training, diagnostics, benchmark and uncertainty. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide full-cohort uncertainty estimates.
+The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the original snapshot code fingerprint covers `core.py`, not the entire repository. Snapshots containing reliability probes additionally record that module's code hash and protocol. Separately, offline inference artifacts fingerprint eight modules: core, temporal, training, diagnostics, benchmark, uncertainty, reliability and reporting. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide missing analyses.
 
-### React experiment workspace
+### One-command demo and Model Reliability
 
-Experiments, Model diagnostics and Batch inference are implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
+After installing the project into a Python 3.11+ virtual environment, run:
+
+```sh
+.venv/bin/python -m signalrank.demo
+# Train and export without opening a server:
+.venv/bin/python -m signalrank.demo --no-serve
+```
+
+The command creates a new run under `artifacts/demo/runs/`, exports `experiment-report.md`, and serves the saved model at `http://127.0.0.1:8015/#reliability` unless `--no-serve` is supplied. Optional `--config`, `--output` and `--port` customize the local demo. Training and serving make no external data requests. Software installation may require network access. The demo deliberately clears inherited extra trusted-model paths and uses history/receipts under its output root. It preserves previous runs and does not automatically open a browser. See [DEMO.md](DEMO.md) for the recruiter walkthrough and [ARCHITECTURE.md](ARCHITECTURE.md) for implementation boundaries.
+
+`#reliability` reads saved offline results from `/api/reliability`; it does not fit models on a request. Normal startup without a newly trained artifact shows instructions, not invented results. The workspace includes:
+
+- Five fixed seeded robustness cases: unchanged control; category and severity composition resampling; severity measurement noise; boolean measurement noise. Composition sampling retains whole records/outcomes with replacement, so unique-record support and prevalence are explicit. Measurement corruption retains the original outcomes; it is not counterfactual risk estimation. The same model/calibrator scores every case. The complete scenario receives one top-50 budget; duplicate draws occupy separate slots. Calibration plots compare **control versus selected scenario**, both calibrated, not raw versus recalibrated.
+- Held-out global permutation importance for description, severity, remote and authentication-required inputs. Description is one raw-input group, not a token explanation. Twenty seeded shuffles per column report signed mean AP drop and Brier increase, plus shuffle standard deviation. SD is not a confidence interval; correlated inputs can distort rankings. No feature selection or causal claim is made.
+- Temporal learning curves at earliest 25/50/75/100% of complete training days within each of the three purged walk-forward folds. All points in a fold use identical later calibration/evaluation records. Every point refits preprocessing, classifier and calibrator. Unsupported classes are marked unavailable. In-sample scores are retrospective diagnostics; more historical data also changes recency. No test-based tuning or winner selection occurs.
+
+All seeds, scenario definitions, support counts, metrics and per-fold dates are exportable as JSON. `/api/export/report` downloads a portable Markdown report for the current saved snapshot with its ID/runtime and scope caveats. Each offline artifact also has a derived Markdown report containing artifact/run IDs and eight-module hashes; `report.json` remains the manifest-verified source of truth. Markdown is a convenience export, not a separately signed audit record.
+
+**Artifact compatibility:** this milestone adds training-code hashes and changes the training implementation. Existing artifact directories are preserved, but strict loading rejects the old code/provenance. Retrain with the current checkout, or use the original checkout/environment to inspect an older model. Archived report snapshots remain readable. Determinism is scoped to recorded configuration/code/runtime; software dependency ranges are not a Python lockfile.
+
+### React implementation
+
+Experiments, Model diagnostics, Model reliability and Batch inference are implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
 
 Select any two snapshots, even across pages, to compare AP, Brier score and recall@50. Selections and search/page state persist in the URL. Incompatible datasets, targets, modes, horizons or evaluation partitions produce explicit reasons and suppress metric deltas. Export the comparison as JSON, inspect each snapshot's configuration, runtime and code/data fingerprints, or follow its saved forecasts. Older reports display missing configuration as unrecorded rather than inventing values. Loading, empty, missing-snapshot and retry states are explicit; late responses cannot overwrite a newly selected snapshot.
 
@@ -152,7 +174,7 @@ This command needs the same local license evidence as the audit and GitHub netwo
 
 Appearance can be set to Light, Dark or System from the header. It defaults to the operating-system preference and remembers an explicit choice locally; storage failures do not block the app. Both themes use shared semantic colors. Readability improvements include larger secondary text, 44px controls, visible focus indicators, a skip-to-content link, focus transfer to the active view heading, keyboard-scrollable table regions and a two-column mobile navigation. These are targeted accessibility improvements, not a full accessibility certification.
 
-The research workbench has eight views: Overview, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Batch inference and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
+The research workbench has nine views: Overview, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Model reliability, Batch inference and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
 
 ### Historical validation milestone
 

@@ -22,8 +22,10 @@ from signalrank.diagnostics import build as diagnostics
 from signalrank.benchmark import build as benchmark
 from signalrank.history import ExperimentStore, snapshot
 from signalrank.temporal import evaluate
+from signalrank.reliability import build as reliability
+from signalrank.reporting import markdown
 
-CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py"}
+CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py"}
 
 
 def runtime():
@@ -47,6 +49,7 @@ def train(config, root=Path("artifacts")):
         experiment.report["temporal_evaluation"] = evaluate(config)
         experiment.report["diagnostics"] = diagnostics(experiment)
         experiment.report["benchmark"] = benchmark(*split(generate(config.seed, config.count)), config)
+        experiment.report["reliability"] = reliability(experiment)
         joblib.dump(experiment, directory / "model.joblib", compress=3)
         write_json(directory / "report.json", experiment.report)
         write_json(directory / "model-card.json", {
@@ -64,6 +67,10 @@ def train(config, root=Path("artifacts")):
         artifact_id = sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
         manifest["artifact_id"] = artifact_id
         write_json(directory / "manifest.json", manifest)
+        (directory / "experiment-report.md").write_text(markdown(experiment.report, {
+            "artifact_id": artifact_id, "run_id": run_id, "runtime": manifest["runtime"],
+            "code_sha256": manifest["code_sha256"], "export_scope": "Derived human-readable report; verify the manifest-backed report.json for authoritative saved results."
+        }), encoding="utf-8")
         snapshot_id = ExperimentStore(root / "experiments.sqlite3").save(snapshot(experiment))
         run.update(status="completed", artifact_id=artifact_id, snapshot_id=snapshot_id)
     except Exception as error:
