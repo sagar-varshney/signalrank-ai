@@ -101,11 +101,20 @@ describe('editorial theme legibility', () => {
     const palettes = [css.match(/:root\s*\{([^}]+)\}/)![1], css.match(/:root\[data-theme="dark"\]\s*\{([^}]+)\}/)![1]];
     palettes.forEach(palette => {
       const colors = Object.fromEntries(Array.from(palette.matchAll(/--([\w-]+):\s*(#[\da-f]{6})\b/g), match => [match[1], match[2]]));
-      for (const [foreground, background] of [['ink', 'canvas'], ['ink', 'surface'], ['muted', 'canvas'], ['muted', 'surface'], ['accent', 'surface'], ['hero-accent', 'canvas'], ['warn-text', 'warn-bg'], ['primary-ink', 'primary-bg']]) {
+      for (const [foreground, background] of [['ink', 'canvas'], ['ink', 'surface'], ['ink', 'raised'], ['muted', 'canvas'], ['muted', 'surface'], ['muted', 'sidebar'], ['muted', 'raised'], ['accent', 'surface'], ['accent', 'selected'], ['hero-accent', 'canvas'], ['ink', 'hero-glow'], ['muted', 'hero-glow'], ['ink', 'hero-glow-secondary'], ['muted', 'hero-glow-secondary'], ['warn-text', 'warn-bg'], ['primary-ink', 'primary-bg']]) {
         const values = [luminance(colors[foreground]), luminance(colors[background])].sort((a, b) => a - b);
         expect((values[1] + .05) / (values[0] + .05), foreground + ' on ' + background).toBeGreaterThanOrEqual(4.5);
       }
     });
+  });
+  it('uses a technical local wordmark and a two-color glow without external fonts', () => {
+    const wordmark = css.match(/\.wordmark\s*\{([^}]+)\}/)![1];
+    expect(wordmark).toContain('font-family:ui-monospace');
+    expect(wordmark).not.toMatch(/Georgia|Times New Roman/);
+    expect(css).toContain('var(--hero-glow-secondary)');
+    expect(css).toContain('var(--hero-glow)');
+    expect(css).not.toMatch(/@import|@font-face/);
+    expect(html).not.toContain('fonts.googleapis');
   });
   it('disables illustration motion for reduced-motion preferences', () => {
     expect(css).toMatch(/@media\(prefers-reduced-motion:reduce\).*?animation:none/s);
