@@ -1,0 +1,17 @@
+.git
+.venv
+artifacts
+data
+evidence
+node_modules
+frontend
+build
+dist
+tests
+.env
+.env.*
+*.key
+*.pem
+**/__pycache__
+**/* 2.*
+**/* 3.*

@@ -1,6 +1,8 @@
 # SignalRank AI
 
-A Python rare-event forecasting application. Version 0.1 is a working, entirely synthetic experiment with a FastAPI dashboard, a text-plus-tabular baseline, separate probability calibration, and a held-out chronological benchmark.
+A Python rare-event ML research workbench with a FastAPI dashboard and React/TypeScript UI. Its original fictional data supports calibrated text-plus-tabular ranking, chronological development evaluation, complete prediction explanations, delayed-label replay and fixed-schedule recovery comparisons. It does not claim real-world risk accuracy.
+
+Start with `#showcase` for a guided five-step explanation. The cold blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
 
 ## Run locally
 
@@ -31,7 +33,10 @@ Run `.venv/bin/python -m signalrank.core` for the reproducible JSON benchmark wi
 - TF-IDF text and standardized numeric features, logistic regression, and a later calibration partition.
 - Thirty-day label maturity gaps between training, calibration, and test, with immature observations excluded.
 - Average precision, Brier score, precision/recall at 50, and a severity-ranking baseline.
-- Exact base-model linear contributions, clearly distinguished from causation and calibrated-probability explanations.
+- Prediction Studio with a full raw-log-odds waterfall, separate sigmoid calibration bridge, original/modified comparisons, JSON export and browser-local examples pinned to model versions.
+- Fixed-schedule retraining versus the frozen model across three replay scenarios and three seeds, strict fitting-label maturity, later calibration and paired rolling AP/Brier.
+- Decision trade-off lab with fixed cost assumptions, budgets chosen only on earlier validation and measured on a later maturity-separated development interval.
+- Guided showcase joining prediction, diagnostics, replay, recovery and decision analysis.
 - Forecast explorer, evaluation view, source status, and dataset fingerprint.
 - Five prespecified model comparisons: calibrated/raw combined, text-only, structured-only, and training-prevalence baseline.
 - Fixed-width calibration bins with counts, including empty groups.
@@ -69,7 +74,7 @@ Each training execution gets its own UUID and `run.json` with configuration, sta
 
 `requirements-local.lock.txt` records the installed development versions for Python 3.13.7/macOS. It is not a hash-secured lockfile, license clearance or cross-platform reproducibility guarantee. See [RESEARCH-PROTOCOL.md](RESEARCH-PROTOCOL.md) for the study specification, scientific gates and explicit exclusions. No new official-source downloads, training permission changes, EPSS ingestion or public release occur in this milestone.
 
-Every successful app startup captures the synthetic experiment in `artifacts/experiments.sqlite3` (ignored by Git). The canonical report, forecasts and provenance determine a SHA-256 snapshot ID. Identical payloads deduplicate, preserving their first-save timestamp; changed results, core model code or runtime versions produce a distinct snapshot. This is snapshot history, not a log of every execution. Existing snapshots are never updated by the application. SQLite is local storage, not a tamper-proof audit service or a multi-user deployment.
+Every successful local-profile app startup captures the synthetic experiment in `artifacts/experiments.sqlite3` (ignored by Git). The canonical report, forecasts and provenance determine a SHA-256 snapshot ID. Identical payloads deduplicate, preserving their first-save timestamp; changed results, core model code or runtime versions produce a distinct snapshot. This is snapshot history, not a log of every execution. Existing snapshots are never updated by the application. SQLite is local storage, not a tamper-proof audit service or a multi-user deployment.
 
 Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the database when moving or backing up your workspace; a fresh clone creates its own history. Initialization errors fail startup rather than silently discarding history. Tests use temporary databases.
 
@@ -77,7 +82,7 @@ Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the databas
 - `GET /api/experiments/{id}`: complete saved report, provenance and top-100 forecasts; also the UI's JSON export.
 - `#experiments/{id}` → `#forecasts/{id}`: inspect saved context and forecast factors without replacing them with the current model's output.
 
-The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the original snapshot code fingerprint covers `core.py`, not the entire repository. Snapshots containing reliability probes additionally record that module's code hash and protocol. Separately, offline inference artifacts fingerprint ten modules: core, temporal, training, diagnostics, benchmark, uncertainty, reliability, reporting, replay and challenge. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide missing analyses.
+The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the original snapshot code fingerprint covers `core.py`, not the entire repository. Snapshots containing reliability probes additionally record that module's code hash and protocol. Separately, offline inference artifacts fingerprint thirteen modules: core, temporal, training, diagnostics, benchmark, uncertainty, reliability, reporting, replay, challenge, studio, decision and recovery. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide missing analyses.
 
 ### One-command demo and Model Reliability
 
@@ -189,7 +194,7 @@ Run `.venv/bin/python -m signalrank.audit` after restoring local `evidence/` lic
 
 The intended real-data target is **future KEV catalog inclusion**, not probability of all exploitation or probability of a breach in a particular company. A negative label means no catalog entry observed within the window; it does not establish absence of exploitation. Catalog coverage and reporting delays affect the target.
 
-Synthetic outcomes are generated from a known mathematical process. Performance only verifies the engineering workflow and must never appear on a resume as a real-world ML result. The text features are TF-IDF, not transformer embeddings. No LLM, SHAP, pretrained model, real SBOM matching, deployment, or production monitoring is implemented yet.
+Synthetic outcomes are generated from a known mathematical process. Performance only verifies the engineering workflow and must never appear on a resume as a real-world ML result. The text features are TF-IDF, not transformer embeddings. No LLM, SHAP, pretrained model, real SBOM matching or live production monitoring is implemented. Public-demo deployment files are prepared separately; no live service is implied.
 
 ## Next build stages
 
@@ -213,7 +218,7 @@ This command needs the same local license evidence as the audit and GitHub netwo
 
 Appearance can be set to Light, Dark or System from the header. It defaults to the operating-system preference and remembers an explicit choice locally; storage failures do not block the app. Both themes use shared semantic colors. Readability improvements include larger secondary text, 44px controls, visible focus indicators, a skip-to-content link, focus transfer to the active view heading, keyboard-scrollable table regions and a two-column mobile navigation. These are targeted accessibility improvements, not a full accessibility certification.
 
-The research workbench has 11 views: Overview, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Model reliability, Time replay, Synthetic challenges, Batch inference and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
+The research workbench has 15 views: Overview, Guided showcase, Prediction Studio, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Model reliability, Time replay, Recovery comparison, Decision trade-offs, Synthetic challenges, Batch inference and Forecast explorer. The public profile hides official-data navigation. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
 
 ### Historical validation milestone
 

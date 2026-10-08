@@ -1,5 +1,56 @@
 import { test, expect } from '@playwright/test';
 
+test('Prediction Studio reconstructs scores and restores a browser-local comparison', async ({ page }) => {
+  await page.goto('/#studio');
+  await expect(page.getByText('From intercept to score.', { exact: true })).toBeVisible();
+  await page.getByRole('slider', { name: 'Severity', exact: true }).fill('9');
+  await expect(page.getByText(/Calibrated change:/)).not.toContainText('+0.000');
+  await page.getByRole('button', { name: 'Save comparison locally', exact: true }).click();
+  await expect(page.getByText(/Saved on this browser only/)).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: /Restore example 1/ }).click();
+  await expect(page.getByRole('slider', { name: 'Severity', exact: true })).toHaveValue('9');
+  await expect(page.getByText(/Calibrated change:/)).not.toContainText('+0.000');
+  await page.getByRole('button', { name: 'Export explanation', exact: true }).click();
+  const response = await page.request.get('/api/studio/predict?category=1&severity=9');
+  const value = await response.json();
+  expect(value.contributions.length).toBeGreaterThan(4);
+  expect(value.reconstruction_error).toBeLessThan(1e-12);
+});
+
+test('decision controls keep earlier selection separate from the displayed cohort', async ({ page }) => {
+  await page.goto('/#decisions');
+  await expect(page.getByText('Make the trade-off explicit.', { exact: true })).toBeVisible();
+  const chosen = await page.locator('.prediction-card strong').allTextContents();
+  await page.getByRole('combobox', { name: 'Displayed decision cohort' }).selectOption('validation');
+  expect(await page.locator('.prediction-card strong').allTextContents()).toEqual(chosen);
+  await page.getByRole('combobox', { name: 'Decision curve metric' }).selectOption('cost');
+  await expect(page.getByRole('img', { name: /Hypothetical cost across/ })).toBeVisible();
+  await page.getByRole('slider', { name: 'Inspect a fixed review budget' }).fill('0');
+  await expect(page.getByRole('region', { name: /Selected decision budget/ }).getByText('Unavailable')).toHaveCount(2);
+  await page.getByRole('combobox', { name: 'Missed positive cost' }).selectOption('10');
+  await expect(page.getByText(/Evaluation results never change this recommendation/)).toBeVisible();
+});
+
+test('guided showcase connects all five workspaces and recovery retains all seeds', async ({ page }) => {
+  await page.goto('/#showcase');
+  await page.getByRole('button', { name: /Start guided walkthrough/ }).click();
+  const guide = page.getByRole('region', { name: 'Guided synthetic showcase' });
+  await expect(guide).toContainText('STEP 1 OF 5');
+  for (const view of ['diagnostics', 'replay', 'recovery', 'decisions']) {
+    await guide.getByRole('button', { name: 'Next step' }).click();
+    await expect(page).toHaveURL(new RegExp('#' + view + '$'));
+  }
+  await guide.getByRole('button', { name: 'Finish walkthrough' }).click();
+  await expect(guide).toHaveCount(0);
+  await page.getByRole('navigation').getByRole('button', { name: 'Retraining comparison', exact: true }).click();
+  await expect(page.getByText('Does updating actually help?', { exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Recovery scenario' }).selectOption('stable');
+  await page.getByRole('combobox', { name: 'Recovery chart metric' }).selectOption('average_precision');
+  await expect(page.getByRole('region', { name: /All recovery seeds/ }).locator('tbody tr')).toHaveCount(3);
+  await expect(page.getByRole('region', { name: /Retraining cutoff evidence/ }).locator('tbody tr')).toHaveCount(4);
+});
+
 test('all routes and Light/Dark/System against the running Python app', async ({ page }) => {
   const failures: string[] = [];
   page.on('pageerror', e => failures.push(e.message));
@@ -24,6 +75,8 @@ test('all routes and Light/Dark/System against the running Python app', async ({
     ['Model reliability', 'Beyond a single score.'], ['Time replay', 'Watch the evidence arrive.'],
     ['Synthetic challenges', 'Different assumptions. Same discipline.'], ['Dataset build', 'Dataset reconstruction'],
     ['Data & validation', 'Data & validation'],
+    ['Prediction Studio', 'A prediction you can inspect.'], ['Retraining comparison', 'Test the update, not the assumption.'],
+    ['Decision trade-offs', 'A score is not a decision.'], ['Guided showcase', 'The story behind the model.'],
   ]) {
     await page.getByRole('navigation').getByRole('button', { name: route, exact: true }).click();
     await expect(page.getByRole('heading', { name: heading, level: 1, exact: true })).toBeVisible();

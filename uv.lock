@@ -652,6 +652,7 @@ dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "scikit-learn" },
+    { name = "threadpoolctl" },
     { name = "uvicorn" },
 ]
 
@@ -667,6 +668,7 @@ requires-dist = [
     { name = "joblib", specifier = ">=1.4,<2" },
     { name = "numpy", specifier = ">=2,<3" },
     { name = "scikit-learn", specifier = ">=1.5,<2" },
+    { name = "threadpoolctl", specifier = ">=3.5,<4" },
     { name = "uvicorn", specifier = ">=0.30,<1" },
 ]
 provides-extras = ["test"]

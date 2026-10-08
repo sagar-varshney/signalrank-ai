@@ -30,9 +30,9 @@ def snapshot(experiment):
             **({"reliability_protocol": experiment.report["reliability"]["protocol"],
                 "reliability_code_sha256": sha256(files("signalrank").joinpath("reliability.py").read_bytes()).hexdigest()}
                if "reliability" in experiment.report else {}),
-            **({name + "_protocol": experiment.report[name]["protocol"] for name in ("replay", "challenge") if name in experiment.report}),
+            **({name + "_protocol": experiment.report[name]["protocol"] for name in ("replay", "challenge", "decision", "recovery") if name in experiment.report}),
             **({name + "_code_sha256": sha256(files("signalrank").joinpath(name + ".py").read_bytes()).hexdigest()
-                for name in ("replay", "challenge") if name in experiment.report}),
+                for name in ("replay", "challenge", "decision", "recovery") if name in experiment.report}),
         },
     }
 

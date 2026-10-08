@@ -16,7 +16,19 @@ Installation downloads dependencies from your configured Python package index. T
 
 Node is unnecessary for this demo: compiled React assets are included. To edit the frontend, follow the pnpm instructions in README. The committed Python lock pins dependency resolution and hashes, but does not promise identical numerical results across platforms. `uv sync` manages `.venv`; use `UV_PROJECT_ENVIRONMENT` to choose a separate environment if preserving an existing one. The unpinned pip installation alternative is documented in README.
 
-## Five-minute walkthrough
+## Guided five-step showcase
+
+After startup, open `http://127.0.0.1:8015/#showcase` and choose **Start guided walkthrough**:
+
+1. **Prediction Studio:** edit fictional inputs, compare probabilities, inspect all linear terms and the separate calibration bridge. Browser-local examples and JSON exports pin the model version.
+2. **Diagnostics:** inspect selected negatives, missed positives and subgroup support. Scores are not causal explanations.
+3. **Time replay:** rewind; labels remain pending for 30 days. Drift and mature-label metrics answer different questions.
+4. **Recovery comparison:** compare frozen/scheduled models across seeds and inspect fitting/calibration cutoffs. Updates can help or hurt; the final update has no mature post-update outcome yet. Nothing replaces the serving model.
+5. **Decision trade-offs:** vary hypothetical costs. Budgets are chosen on earlier validation and remain fixed when later evaluation is displayed. Neither interval is an untouched holdout.
+
+Finish returns to showcase and report export. Light/Dark/System and the cold blue-violet design are preserved.
+
+## Extended research walkthrough
 
 1. **Model evaluation:** explain the text-plus-tabular logistic baseline, maturity gaps and separate calibration window. Distinguish AP (ranking) from Brier (probabilistic prediction). Inspect the three walk-forward windows.
 2. **Model diagnostics:** inspect selected negatives/missed positives and subgroup support. Explain why exact linear log-odds contributions are neither causal nor calibrated-probability contributions.

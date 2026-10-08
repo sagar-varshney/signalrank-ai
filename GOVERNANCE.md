@@ -30,6 +30,14 @@ The target is future KEV catalog inclusion, not all exploitation or breach proba
 
 The pilot uses eight KEV-selected 2024 records and eight adjacent identifiers. It is selection-biased and unsuitable for prevalence or predictive metrics. Same-day/already-listed observations are flagged; preliminary labels are not a training dataset. A representative cohort, catalog-history audit, validated cutoff times, mature outcomes and untouched temporal test interval are mandatory next gates.
 
+## Restricted synthetic public-demo scope
+
+The prepared Docker profile uses only original fictional inputs/outcomes and pinned software. It excludes official-data audit JSON, downloaded records and local evidence/SQLite files. Public study endpoints return empty evidence, batch writes are disabled, and Studio creates no visitor receipts. This does not approve historical-data training, display or redistribution.
+
+No new model weights, external visuals/fonts, dataset, telemetry or hosted AI service is introduced. `threadpoolctl`, already in the locked scikit-learn graph, is now a direct BSD-3-Clause dependency to bound offline numerical threads. Charts use original local SVG/CSS and preserve bundled notices. Software notices, code ownership and current hosting terms still require release review; no code license is silently invented. Engineering checks cannot certify zero legal uncertainty.
+
+Preparation creates no provider account or public endpoint. [DEPLOYMENT.md](DEPLOYMENT.md) enforces free-only hosting: one explicitly free service, no paid addons/subscriptions and no payment method. Account connection, terms acceptance and actual public exposure require the account owner's action-time approval.
+
 ## Release gates
 
 The identifier inventory is pinned to an official repository commit and sampled without consulting KEV outcomes. Frame completeness means all matching paths in the selected identifier-year Git tree, not completeness of published vulnerabilities. The inventory includes rejected records and publication years outside the identifier year. Selection does not override source-scope or training gates. Cohort API responses and committed artifacts contain identifiers and provenance, not copied CVE descriptions. Full Git/API downloads remain local under data/raw/ with evidence/cohort-download-manifest.json.

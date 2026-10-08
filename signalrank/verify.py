@@ -23,11 +23,11 @@ def verify():
             raise AssertionError("Serialized model/report mismatch")
         if not (path / "experiment-report.md").is_file():
             raise AssertionError("Missing human-readable export")
-        if len(saved.report["replay"]["runs"]) != 9 or len(saved.report["challenge"]["items"]) != 12:
+        if len(saved.report["replay"]["runs"]) != 9 or len(saved.report["challenge"]["items"]) != 12 or len(saved.report["recovery"]["runs"]) != 9 or saved.report["decision"]["status"] != "available":
             raise AssertionError("Incomplete offline evidence")
         return {"status": "verified", "mode": "synthetic", "runtime": runtime(), "artifact_id": manifest["artifact_id"],
                 "code_sha256": manifest["code_sha256"], "compared_predictions": len(expected.test),
-                "replay_runs": 9, "challenge_runs": 12,
+                "replay_runs": 9, "challenge_runs": 12, "recovery_runs": 9, "decision_status": saved.report["decision"]["status"],
                 "scope": "Temporary original synthetic run. Bit-identical reloaded predictions in this environment; not cross-hardware reproducibility, authenticity or real-world accuracy."}
 
 

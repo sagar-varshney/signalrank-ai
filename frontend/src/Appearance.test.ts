@@ -78,7 +78,7 @@ describe('shipped appearance and navigation', () => {
     expect(nav.hidden).toBe(true);
     narrow.change(false); expect(nav.hidden).toBe(false);
     const routes = Array.from(nav.querySelectorAll<HTMLButtonElement>('[data-view]'), button => button.dataset.view);
-    expect(new Set(routes).size).toBe(11);
+    expect(new Set(routes).size).toBe(15);
     routes.forEach(route => expect(window.document.getElementById(route!)).not.toBeNull());
   });
   it('opens the intended tools from the overview without triggering inference or training', async () => {

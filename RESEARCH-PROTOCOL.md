@@ -62,6 +62,22 @@ Drift compares each complete weekly window to fixed original training inputs. Se
 
 The existing purged chronological split and 30-day maturity rules apply. Candidates are standardized logistic regression (C=1, max_iter=1000), histogram gradient boosting (60 iterations, learning rate .05, 15 leaves, minimum leaf 20, L2=1, no early stopping), and training prevalence. Each fitted candidate receives separate sigmoid calibration (C=1, max_iter=1000) on the later calibration partition. Report all raw/calibrated metrics and calibrated AP, Brier and recall@50 across seeds, with sample SD (ddof=1). Both classes are required in every partition; no resampling repair. Seeds, cases and parameters are fixed without evaluation-driven tuning. These are explored synthetic development challenges, not a final holdout, general NLP comparison, confidence intervals or winner-selection procedure. No serving-model replacement occurs.
 
+### Complete saved-model sensitivity explanation
+
+`studio.py` transforms one original fictional category plus severity/remote/authentication inputs through saved preprocessing. Every transformed feature value times its coefficient, plus the intercept, must reconstruct raw log-odds within 1e-12 relative/absolute tolerance. All terms, including zeros, are exported. The waterfall draws nonzero terms; sigmoid calibration is a separate bridge. Comparisons are model sensitivity, not causal interventions, risk reductions or new validation.
+
+### Fixed-schedule recovery comparison
+
+`fixed-schedule-recovery-v1` uses the replay's three scenarios, three seeds, 182 days and 12 inputs/day. Updates on days 84/112/140/168 are fixed, not chosen from drift or evaluation. At update T, calibration observations span T−60 through T−31 inclusive; all 30-day labels mature strictly before T. Training labels mature strictly before T−60. Original historical rows and available replay history feed the original preprocessing/logistic C and separate sigmoid fit. Class-deficient fits are skipped without resampling, retaining the prior model.
+
+The scheduled model scores only arrivals from its update until the next update; frozen/scheduled inputs and outcomes are identical. Checkpoints use the last 30 mature observation days; AP/Brier require 60 records and both classes. Final summaries cover all mature observations and day-91-onward mature observations, including the latter interval in the control. Weekly budget stays 15 per wholly matured weekly cohort. The last 30 arrival days remain pending, so the day-168 model has no mature post-update outcome in this replay: its fitting evidence is not proof of benefit. Fit times and full-run comparisons are retrospective. No serving-model promotion occurs.
+
+### Earlier-validation decision trade-offs
+
+`past-validation-budget-v1` subdivides the already explored chronological test cohort at its 40% date boundary. Whole dates before the boundary form decision validation; evaluation starts boundary+30 days, after validation-label maturity. Both need 30 records and both classes, else analysis is unavailable without resampling. These are development subdivisions, not a new independent holdout.
+
+Count budgets are 0,5,10,… capped at the minimum of 100 and both cohort sizes, including that cap. Saved-model and severity rankings use identical rows and stable ties. Hypothetical cost = missed positives × missed cost + selected negatives × negative cost + reviewed records × review cost. Fixed costs are missed [1,5,10], negative [0,1,5], review [0,.1,1]: 27 profiles per policy. Minimum validation cost chooses the budget; ties choose fewer reviews. The same count, not rate/threshold, is measured on later evaluation. Evaluation never reselects the recommendation. No measured business benefit, causal conclusion, tuning or time savings are claimed.
+
 ## Stop conditions (unchanged gates)
 
 Remain synthetic-only if permission scope, historical availability, labels, or sample size are inadequate. Any target/window/cohort change requires a new protocol version with its motivation recorded before evaluation. Do not switch to exploitation claims, enrich positives silently, or interpret non-inclusion as no exploitation.

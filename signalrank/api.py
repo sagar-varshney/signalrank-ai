@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from importlib.resources import files
 import json
 import os
+from time import monotonic
 
 from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
@@ -14,15 +15,21 @@ from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
 from signalrank.replay import at_checkpoint
+from signalrank.studio import explain
+from signalrank.inference import DESCRIPTIONS
+from signalrank.deployment import Settings, ConfiguredHost, PublicBoundary, MemorySnapshotStore, lightweight_report
 from typing import Literal
 from pathlib import Path
 from urllib.parse import urlsplit
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
 @asynccontextmanager
 async def lifespan(app):
+    app.state.settings = Settings.load()
+    app.state.public_budget = {"tokens": 120., "last": monotonic(), "active": 0}
     model_dir = os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIR")
+    if app.state.settings.public and (not model_dir or os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIRS")):
+        raise ValueError("Public demo requires one explicitly trusted build-time artifact; fallback training and extra models are disabled")
     directories = list(dict.fromkeys(filter(None, [model_dir, *os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIRS", "").split(os.pathsep)])))
     app.state.models = {}
     for directory in directories:
@@ -38,17 +45,30 @@ async def lifespan(app):
         app.state.experiment = next(iter(app.state.models.values()))[0]
     else:
         app.state.experiment = Experiment()
+    if app.state.settings.public:
+        required = {"diagnostics", "benchmark", "reliability", "replay", "challenge", "decision", "recovery"}
+        if not required.issubset(app.state.experiment.report):
+            raise ValueError("Public artifact is missing required offline evidence; startup will not compute a fallback")
     if "diagnostics" not in app.state.experiment.report:
         app.state.experiment.report["diagnostics"] = diagnostics(app.state.experiment)
-    app.state.batches = BatchStore()
-    app.state.history = ExperimentStore()
-    app.state.experiment_id = app.state.history.save(snapshot(app.state.experiment))
+    if app.state.settings.public:
+        payload = snapshot(app.state.experiment)
+        payload["report"] = lightweight_report(payload["report"])
+        payload["provenance"] = {**payload["provenance"], "release_profile": "public_synthetic", "omitted_fields": "Complete replay/recovery ledgers; available through bounded evidence endpoints"}
+        app.state.batches = None
+        app.state.history = MemorySnapshotStore(payload)
+        app.state.experiment_id = app.state.history.identifier
+    else:
+        app.state.batches = BatchStore()
+        app.state.history = ExperimentStore()
+        app.state.experiment_id = app.state.history.save(snapshot(app.state.experiment))
     yield
 
 
 app = FastAPI(title="SignalRank AI", version="0.1.0", lifespan=lifespan)
 app.add_middleware(BatchBodyLimit)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]", "testserver"])
+app.add_middleware(ConfiguredHost)
+app.add_middleware(PublicBoundary)
 app.mount("/static", StaticFiles(directory=str(files("signalrank").joinpath("static"))), name="static")
 
 
@@ -59,7 +79,8 @@ def dashboard():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "mode": "synthetic", "experiment_id": app.state.experiment_id}
+    return {"status": "ok", "mode": "synthetic", "experiment_id": app.state.experiment_id,
+            "profile": "public" if app.state.settings.public else "local", "visitor_storage": not app.state.settings.public}
 
 
 @app.get("/api/experiments")
@@ -77,7 +98,42 @@ def experiment_snapshot(identifier: str):
 
 @app.get("/api/report")
 def report():
+    if app.state.settings.public:
+        return {k: v for k, v in app.state.experiment.report.items() if k not in ("replay", "recovery", "challenge", "reliability", "diagnostics", "benchmark", "decision")}
     return app.state.experiment.report
+
+
+@app.get("/api/studio/options")
+def studio_options():
+    return {"categories": list(DESCRIPTIONS), "models": [e for _, e in app.state.models.values()],
+            "snapshot_id": app.state.experiment_id, "profile": "public" if app.state.settings.public else "local"}
+
+
+@app.get("/api/studio/predict")
+def studio_predict(category: int = Query(default=1, ge=0, le=4), severity: float = Query(default=5, ge=1, le=10, allow_inf_nan=False),
+                   remote: bool = True, authentication_required: bool = False,
+                   model_id: str = Query(default="", pattern="^([a-f0-9]{64})?$")):
+    entry = app.state.models.get(model_id) if model_id else next(iter(app.state.models.values()), None)
+    if entry is None:
+        raise HTTPException(409, "Prediction Studio requires an explicitly trusted saved model; no fallback version or browser artifact loading")
+    experiment, evidence = entry
+    return {**explain(experiment, category, severity, remote, authentication_required), "model": evidence, "snapshot_id": app.state.experiment_id}
+
+
+@app.get("/api/decision")
+def decision_report():
+    return {"snapshot_id": app.state.experiment_id, **app.state.experiment.report.get("decision", {
+        "status": "unavailable", "warning": "No offline decision analysis loaded. Run the current local demo."})}
+
+
+@app.get("/api/recovery")
+def recovery_report():
+    result = app.state.experiment.report.get("recovery")
+    if not result:
+        return {"status": "unavailable", "warning": "No offline recovery comparison loaded. Run the current local demo."}
+    return {"status": "available", "snapshot_id": app.state.experiment_id,
+            **{k: v for k, v in result.items() if k != "runs"},
+            "runs": [{k: v for k, v in run.items() if k != "ledger"} for run in result["runs"]]}
 
 
 @app.get("/api/diagnostics")
@@ -164,6 +220,8 @@ def comparison(a: str = Query(pattern="^[a-f0-9]{64}$"), b: str = Query(pattern=
 
 @app.get("/api/inference/models")
 def inference_models():
+    if app.state.settings.public:
+        return {"items": [], "warning": "The public demo disables shared visitor batch receipts. Prediction Studio remains interactive; run locally for saved batches."}
     return {"items": [evidence for _, evidence in app.state.models.values()],
             "warning": "Only artifacts explicitly trusted at server startup can be selected. No browser model upload or arbitrary path loading."}
 
@@ -175,6 +233,8 @@ def inference_sample(seed: int = Query(default=2026, ge=0, le=2**32 - 1), count:
 
 @app.post("/api/batches", status_code=201)
 def run_batch(body: BatchRequest, request: Request):
+    if app.state.settings.public:
+        raise HTTPException(403, "Visitor batch storage is disabled")
     origin = request.headers.get("origin")
     if origin and (urlsplit(origin).netloc != request.url.netloc or urlsplit(origin).scheme != request.url.scheme):
         raise HTTPException(403, "Cross-origin batch creation is not permitted")
@@ -187,11 +247,15 @@ def run_batch(body: BatchRequest, request: Request):
 
 @app.get("/api/batches")
 def batches(limit: int = Query(default=10, ge=1, le=100), offset: int = Query(default=0, ge=0)):
+    if app.state.settings.public:
+        return {"total": 0, "items": []}
     return app.state.batches.list(limit, offset)
 
 
 @app.get("/api/batches/{identifier}")
 def batch(identifier: str):
+    if app.state.settings.public:
+        raise HTTPException(404, "No shared visitor receipts in the public demo")
     receipt = app.state.batches.get(identifier)
     if receipt is None:
         raise HTTPException(404, "Batch receipt not found")
@@ -211,11 +275,15 @@ def forecasts(limit: int = Query(default=20, ge=1, le=100)):
 
 @app.get("/api/sources")
 def sources():
+    if app.state.settings.public:
+        return {"synthetic": registry()["synthetic"]}
     return registry()
 
 
 @app.get("/api/feasibility")
 def feasibility():
+    if app.state.settings.public:
+        return {"training_enabled": False, "decision": "Official-data auditing is local-only", "sample": [], "additions_by_year": {}}
     artifact = files("signalrank").joinpath("feasibility.json")
     if not artifact.is_file():
         return {"training_enabled": False, "decision": "Audit has not been run", "sample": []}
@@ -224,6 +292,8 @@ def feasibility():
 
 @app.get("/api/validation")
 def validation():
+    if app.state.settings.public:
+        return {"training_enabled": False, "checked": 0, "timestamp_checks_passed": 0, "label_counts": {}, "rows": []}
     artifact = files("signalrank").joinpath("validation.json")
     if not artifact.is_file():
         return {"training_enabled": False, "checked": 0, "timestamp_checks_passed": 0, "label_counts": {}, "rows": []}
@@ -237,6 +307,8 @@ def simulate(budget: int = Query(default=50, ge=1, le=100)):
 
 @app.get("/api/cohort")
 def cohort():
+    if app.state.settings.public:
+        return {"frame_count": 0, "sample_count": 0, "selected_ids": [], "training_enabled": False, "scope": "Original synthetic demo only; official-data inventory is local-only"}
     artifact = files("signalrank").joinpath("cohort.json")
     if not artifact.is_file():
         return {"frame_count": 0, "sample_count": 0, "selected_ids": [], "training_enabled": False, "scope": "No frame acquired yet"}
@@ -244,6 +316,8 @@ def cohort():
 
 
 def readiness_report():
+    if app.state.settings.public:
+        return {"training_enabled": False, "selected": 0, "processed": 0, "pending": 0, "states": {}, "candidate_labels": {}, "blockers": ["Public profile contains no official-data audit records. Run the local workbench for that separate gated study."], "rows": []}
     artifact = files("signalrank").joinpath("readiness.json")
     if not artifact.is_file():
         return {"training_enabled": False, "selected": 0, "processed": 0, "pending": 0, "states": {}, "candidate_labels": {}, "blockers": ["Dataset reconstruction has not run."], "rows": []}

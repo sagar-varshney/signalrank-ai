@@ -1,0 +1,15 @@
+# Preparation only: no service is created by committing this file.
+# Free plan can sleep and has usage/memory limits. No disks, databases or paid add-ons.
+services:
+  - type: web
+    name: signalrank-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: SIGNALRANK_PROFILE
+        value: public
+      - key: PORT
+        value: "10000"

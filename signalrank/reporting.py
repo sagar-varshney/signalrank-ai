@@ -56,6 +56,28 @@ def markdown(report, provenance):
             lines.append(f'| {item["name"]} | {item["candidate"]} | {item["evaluated_seeds"]} | {values} |')
     else:
         lines += ["", "Synthetic challenge suite unavailable in this snapshot."]
-    lines += ["", "## Architecture", "", "Original generator → past-only training/preprocessing → later sigmoid calibration → mature evaluation → offline reliability, replay and challenge evidence → trusted local artifact → read-only API/React evidence views.",
+    recovery = report.get("recovery")
+    if recovery:
+        lines += ["", "## Fixed-schedule retraining comparison", "", recovery["warning"], "",
+                  "| Scenario | Seed | Frozen AP | Scheduled AP | Frozen Brier | Scheduled Brier |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
+        for run in recovery["runs"]:
+            a, b = [run["results"]["postchange_mature"][k] for k in ("frozen", "scheduled")]
+            values = f'{a["average_precision"]:.6f} | {b["average_precision"]:.6f} | {a["brier_score"]:.6f} | {b["brier_score"]:.6f}' if a and b else "Unavailable | Unavailable | Unavailable | Unavailable"
+            lines.append(f'| {run["name"]} | {run["seed"]} | {values} |')
+        lines += ["", "Interval: day 91 onward with mature labels only; the control has no scheduled generator change. All fixed seeds retained. No winner or serving-model promotion."]
+    else:
+        lines += ["", "Retraining comparison unavailable in this snapshot."]
+    decision = report.get("decision")
+    if decision:
+        lines += ["", "## Decision trade-offs", "", decision["warning"], ""]
+        if decision["status"] == "available":
+            lines += [decision["selection_rule"], "", "| Policy | Budget | Validation cost | Later evaluation cost |", "| --- | ---: | ---: | ---: |"]
+            for profile in decision["profiles"]:
+                if (profile["missed_cost"], profile["negative_cost"], profile["review_cost"]) == (5, 1, .1):
+                    lines.append(f'| {profile["policy"]} | {profile["chosen_budget"]} | {profile["validation_cost"]:.3f} | {profile["evaluation_cost"]:.3f} |')
+            lines += ["", "Illustrative profile: missed-positive cost 5, selected-negative cost 1, review cost .1 units. Costs are not monetary savings."]
+        else:
+            lines += [decision.get("reason", "Unavailable")]
+    lines += ["", "## Architecture", "", "Original generator → past-only training/preprocessing → later sigmoid calibration → mature evaluation → offline reliability, replay, retraining and decision evidence → trusted artifact → bounded prediction/explanation and read-only evidence views.",
               "", "## Limitations", "", "All windows are synthetic development data. No real-data training or redistribution permission is granted. Checksums detect accidental changes, not malicious replacement. Public multi-user deployment is not supported.", ""]
     return "\n".join(lines)

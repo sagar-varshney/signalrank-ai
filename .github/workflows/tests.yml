@@ -18,7 +18,7 @@ jobs:
         run: >-
           python -c "from pathlib import Path; from zipfile import ZipFile;
           names = ZipFile(next(Path('dist').glob('signalrank_ai-*.whl'))).namelist();
-          required = {'signalrank/diagnostics.py', 'signalrank/benchmark.py', 'signalrank/inference.py', 'signalrank/uncertainty.py', 'signalrank/reliability.py', 'signalrank/reporting.py', 'signalrank/replay.py', 'signalrank/challenge.py', 'signalrank/verify.py', 'signalrank/demo.py', 'signalrank/static/editorial.css', 'signalrank/static/theme.js', 'signalrank/static/react/experiments.js', 'signalrank/static/react/experiments.css', 'signalrank/static/react/THIRD-PARTY-NOTICES.txt'};
+          required = {'signalrank/diagnostics.py', 'signalrank/benchmark.py', 'signalrank/inference.py', 'signalrank/uncertainty.py', 'signalrank/reliability.py', 'signalrank/reporting.py', 'signalrank/replay.py', 'signalrank/challenge.py', 'signalrank/studio.py', 'signalrank/decision.py', 'signalrank/recovery.py', 'signalrank/deployment.py', 'signalrank/release.py', 'signalrank/verify.py', 'signalrank/demo.py', 'signalrank/static/editorial.css', 'signalrank/static/theme.js', 'signalrank/static/react/experiments.js', 'signalrank/static/react/experiments.css', 'signalrank/static/react/THIRD-PARTY-NOTICES.txt'};
           assert required.issubset(names), 'Missing ML modules or compiled UI assets';
           assert all(n.startswith(('signalrank/', 'signalrank_ai-')) for n in names), 'Unexpected package contents'"
   frontend:
@@ -61,9 +61,36 @@ jobs:
         working-directory: frontend
       - run: pnpm test:e2e
         working-directory: frontend
+      - name: Public synthetic profile in Chromium
+        run: pnpm test:e2e
+        working-directory: frontend
+        env:
+          SIGNALRANK_E2E_PUBLIC: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: browser-test-failure-evidence
           path: frontend/test-results/
           retention-days: 7
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Build original synthetic public image (no registry push)
+        run: docker build -t signalrank-public-ci .
+      - name: Read-only release under the free-plan resource envelope
+        run: |
+          docker run -d --name signalrank-public-ci --read-only --memory=512m --memory-swap=512m --cpus=0.1 --cap-drop=ALL --security-opt=no-new-privileges -p 127.0.0.1:8030:10000 -e SIGNALRANK_ALLOWED_HOSTS=127.0.0.1 signalrank-public-ci
+          python deploy/smoke.py --wait 180
+          docker exec signalrank-public-ci python -c "import os; from pathlib import Path; assert os.getuid() == 10001; assert not list(Path('/app').rglob('*.sqlite3')); assert not Path('/app/artifacts').exists(); assert {p.name for p in Path('/app/signalrank').glob('*.json')} == {'sources.json'}"
+          docker exec signalrank-public-ci python -c "from pathlib import Path; peak=int(Path('/sys/fs/cgroup/memory.peak').read_text()); print('Container peak bytes in bounded smoke test:', peak); assert peak < 512 * 1024 * 1024"
+          docker stats --no-stream signalrank-public-ci
+      - name: Container logs and cleanup
+        if: always()
+        run: |
+          docker logs signalrank-public-ci || true
+          docker inspect -f '{{.State.OOMKilled}}' signalrank-public-ci || true
+          docker stop signalrank-public-ci || true

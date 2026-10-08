@@ -1,10 +1,28 @@
 const el = id => document.getElementById(id);
 const pct = x => (x * 100).toFixed(1) + '%';
 const state = { validation: [], forecasts: [], page: 0 };
-const pages = {overview: 'Overview', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', diagnostics: 'Model diagnostics', reliability: 'Model reliability', replay: 'Time replay', challenge: 'Synthetic challenges', inference: 'Batch inference', forecasts: 'Forecast explorer'};
+const pages = {overview: 'Overview', showcase: 'Guided showcase', studio: 'Prediction Studio', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', diagnostics: 'Model diagnostics', reliability: 'Model reliability', replay: 'Time replay', recovery: 'Retraining comparison', decisions: 'Decision trade-offs', challenge: 'Synthetic challenges', inference: 'Batch inference', forecasts: 'Forecast explorer'};
 let forecastRequest = 0;
+const legacyLoads = new Map();
+let legacyReads = Promise.resolve();
 function node(tag, text, className) { const n = document.createElement(tag); n.textContent = text; if (className) n.className = className; return n; }
-async function get(path) { const r = await fetch(path); if (!r.ok) throw new Error(path + ': HTTP ' + r.status); return r.json(); }
+function get(path) {
+  const result = legacyReads.then(async () => { const r = await fetch(path); if (!r.ok) throw new Error(path + ': HTTP ' + r.status); return r.json(); });
+  legacyReads = result.catch(() => {});
+  return result;
+}
+function loadOnce(key, loader) {
+  if (legacyLoads.has(key)) return;
+  legacyLoads.set(key, loader().catch(error => { legacyLoads.delete(key); failure(error); }));
+}
+function loadLegacy(name) {
+  if (!state.profileReady) return;
+  if (name === 'overview' || name === 'models') loadOnce('models', models);
+  if (name === 'overview') loadOnce('history', experimentHistory);
+  if (name === 'models') loadOnce('temporal', loadTemporal);
+  if (name === 'data' || (state.profile !== 'public' && name === 'overview')) loadOnce('evidence', evidence);
+  if (name === 'build' || (state.profile !== 'public' && name === 'overview')) loadOnce('build', refreshBuild);
+}
 function failure(e) { el('status').hidden = false; el('status').textContent = 'Some workspace data could not load. ' + e.message; }
 function metric(label, value, note = '') { const n = node('div', '', 'metric'); n.append(node('span', label, 'metric-label'), node('strong', String(value), 'metric-value'), node('span', note, 'metric-note')); return n; }
 function showView(route) {
@@ -18,6 +36,7 @@ function showView(route) {
   document.title = pages[name] + ' · SignalRank';
   history.replaceState(null, '', '#' + name + (identifier ? '/' + identifier : '') + (name === 'experiments' && query ? '?' + query : ''));
   window.dispatchEvent(new Event('signalrank:view'));
+  loadLegacy(name);
   if (name === 'forecasts') loadForecasts(identifier).catch(failure);
 }
 document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
@@ -97,7 +116,6 @@ el('budget').addEventListener('input', () => { el('budget-count').textContent = 
 
 async function models() { const r = await get('/api/report'); el('overview-metrics').append(metric('Average precision', r.model.average_precision.toFixed(3), 'Synthetic test set'), metric('Recall at 50', pct(r.model.recall_at_50), 'Synthetic test set'), metric('Brier score', r.model.brier_score.toFixed(3), 'Lower is better')); for (const [name, s] of Object.entries(r.splits)) { const div = node('div', ''); div.append(node('strong', name.toUpperCase() + ' · ' + s.count), node('p', s.first + ' → ' + s.last)); el('splits').append(div); } el('split-note').textContent = r.excluded_unmatured_or_embargoed + ' records excluded by time-window rules. Severity-only average precision: ' + r.severity_baseline.average_precision.toFixed(3); for (const m of r.comparisons) { const tr = node('tr', ''); tr.append(node('td', m.name), node('td', m.average_precision.toFixed(3), 'numeric'), node('td', m.brier_score.toFixed(3), 'numeric'), node('td', pct(m.recall_at_50), 'numeric')); el('comparisons').append(tr); } for (const b of r.calibration_bins) { const tr = node('tr', ''); tr.append(node('td', pct(b.lower) + '–' + pct(b.upper)), node('td', b.count, 'numeric'), node('td', b.predicted === null ? '—' : pct(b.predicted), 'numeric'), node('td', b.observed === null ? '—' : pct(b.observed), 'numeric')); el('calibration').append(tr); } el('evaluation-note').textContent = r.evaluation_note; el('dataset-hash').textContent = 'Dataset SHA-256 · ' + r.dataset_sha256.slice(0, 16); el('dataset-hash').title = r.dataset_sha256; await budget(); }
 async function evidence() { const [a, v, c, sources] = await Promise.all([get('/api/feasibility'), get('/api/validation'), get('/api/cohort'), get('/api/sources')]); state.validation = v.rows; auditRows(); el('pilot-summary').textContent = v.timestamp_checks_passed + ' of ' + v.checked + ' records pass timestamp checks. The sample is selection-biased.'; el('pilot-count').textContent = v.checked + ' observations'; el('cohort-summary').textContent = c.sample_count.toLocaleString() + ' identifiers selected from ' + c.frame_count.toLocaleString() + ' pinned record paths. Historical reconstruction pending.'; el('frame-status').textContent = c.frame_complete ? 'Inventory complete' : 'Pending'; el('frame-metrics').append(metric('Identifier-year frame', c.frame_count.toLocaleString(), 'CVE-2024 record paths'), metric('Selected for reconstruction', c.sample_count.toLocaleString(), 'No outcome-based selection'), metric('Real-data training', 'Not enabled', 'Historical checks pending')); updateBuildOverview(); el('frame-scope').textContent = c.scope; el('frame-revision').textContent = c.revision ? 'Pinned revision: ' + c.revision + ' · Seed: ' + c.seed : 'No pinned revision'; el('frame-revision').style.overflowWrap = 'anywhere'; el('frame-next').textContent = c.next_gate ?? 'Acquire an identifier frame before sampling.'; el('selected-ids').textContent = c.selected_ids.join('\n'); const years = Object.entries(a.additions_by_year ?? {}), max = Math.max(1, ...years.map(x => x[1])); for (const [year, count] of years) { const row = node('div', '', 'year'), bar = node('div', '', 'bar'), fill = node('span', ''); fill.style.width = count / max * 100 + '%'; bar.append(fill); row.append(node('span', year), bar, node('span', count)); el('years').append(row); } for (const [name, source] of Object.entries(sources)) { const row = node('div', '', 'source-row'); row.append(node('strong', name), node('span', source.status, 'badge'), node('p', source.scope ?? source.purpose ?? source.reason ?? '')); el('sources').append(row); } }
-models().catch(failure); evidence().catch(failure);
 // The build is run explicitly from the CLI, never from a browser request.
 let buildOffset = 0, buildRequest = 0, detailRequest = 0;
 let evidenceTrigger = null;
@@ -158,7 +176,6 @@ el('build-search').addEventListener('keydown', e => { if (e.key === 'Enter') fil
 el('build-previous').addEventListener('click', () => { buildOffset = Math.max(0, buildOffset - 25); buildRows().catch(failure); });
 el('build-next').addEventListener('click', () => { buildOffset += 25; buildRows().catch(failure); });
 el('close-evidence').addEventListener('click', () => { ++detailRequest; el('record-evidence').hidden = true; if (evidenceTrigger?.isConnected) evidenceTrigger.focus(); else el('apply-build-filter').focus(); });
-refreshBuild().catch(failure);
 
 function updateBuildOverview() {
   const r = state.buildReport;
@@ -209,8 +226,28 @@ el('command-dialog').addEventListener('keydown', event => {
   }
   if (event.key === 'Enter' && document.activeElement === el('command-search') && buttons.length) { event.preventDefault(); buttons[0].click(); }
 });
-get('/api/health').then(r => { el('connection-status').textContent = r.status === 'ok' ? '● API reachable · synthetic' : 'API unavailable'; }).catch(() => { el('connection-status').textContent = 'API unavailable'; });
-experimentHistory().catch(failure);
+get('/api/health').then(r => {
+  state.profile = r.profile;
+  state.profileReady = true;
+  state.currentId = r.experiment_id;
+  el('connection-status').textContent = r.status === 'ok' ? '● API reachable · synthetic' : 'API unavailable';
+  if (r.profile === 'public') {
+    document.body.dataset.profile = 'public';
+    document.querySelector('.aside-note .badge').textContent = 'DEMO · SYNTHETIC';
+    document.querySelector('.aside-note a').hidden = true;
+    document.querySelector('[data-view="build"]').closest('.nav-group').hidden = true;
+    el('readiness-headline').closest('.track-card').hidden = true;
+    el('pilot-summary').closest('.panel').hidden = true;
+    const tryButton = document.querySelector('#overview .hero-actions [data-view="inference"]');
+    tryButton.dataset.view = 'studio';
+    tryButton.textContent = 'Try Prediction Studio';
+    document.querySelector('#overview .hero-description').textContent = 'A synthetic ML research workbench. Inspect predictions, test changes over time, and connect rankings to explicit decisions.';
+    document.querySelector('footer>span').textContent = 'SignalRank · Synthetic demonstration';
+    const notice = node('p', 'Public synthetic demo: interactive predictions are stateless; official-data audits and saved visitor batches are local-only.', 'notice subtle');
+    el('overview-showcase-link').append(notice);
+  }
+  loadLegacy(location.hash.slice(1).split('/')[0]);
+}).catch(() => { el('connection-status').textContent = 'API unavailable'; });
 showView(location.hash.slice(1));
 
 function temporalBudget() {
@@ -255,7 +292,8 @@ function renderTemporalCurve(fold) {
   const link = node('a', 'View temporal report JSON ↗'); link.href = '/api/temporal';
   container.append(node('h3', 'Precision–recall · window ' + fold.fold), svg, node('p', 'Solid: model · Dashed: prevalence (' + pct(fold.prevalence) + '). The endpoint at zero recall is conventional, not observed perfect performance.', 'caption'), link);
 }
-get('/api/temporal').then(r => {
+async function loadTemporal() {
+  const r = await get('/api/temporal');
   state.temporal = r;
   el('temporal-note').textContent = r.warning;
   el('temporal-window').disabled = !r.folds.length; el('temporal-budget').disabled = !r.folds.length;
@@ -268,6 +306,6 @@ get('/api/temporal').then(r => {
     const option = node('option', 'Window ' + fold.fold + ' · ' + fold.status); option.value = fold.fold; el('temporal-window').append(option);
   }
   temporalBudget();
-}).catch(failure);
+}
 el('temporal-window').addEventListener('change', temporalBudget);
 el('temporal-budget').addEventListener('change', temporalBudget);

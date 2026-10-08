@@ -26,8 +26,10 @@ from signalrank.reliability import build as reliability
 from signalrank.reporting import markdown
 from signalrank.replay import build as replay
 from signalrank.challenge import build as challenge
+from signalrank.decision import build as decision
+from signalrank.recovery import build as recovery
 
-CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py", "replay.py", "challenge.py"}
+CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py", "replay.py", "challenge.py", "studio.py", "decision.py", "recovery.py"}
 
 
 def runtime():
@@ -54,10 +56,12 @@ def train(config, root=Path("artifacts")):
         experiment.report["reliability"] = reliability(experiment)
         experiment.report["replay"] = replay(experiment)
         experiment.report["challenge"] = challenge()
+        experiment.report["decision"] = decision(experiment)
+        experiment.report["recovery"] = recovery(experiment)
         joblib.dump(experiment, directory / "model.joblib", compress=3)
         write_json(directory / "report.json", experiment.report)
         write_json(directory / "model-card.json", {
-            "intended_use": "Local synthetic ML engineering and evaluation demonstration only",
+            "intended_use": "Synthetic ML engineering and evaluation demonstration; local workbench or restricted public demo profile only",
             "prohibited_claims": ["Real-world exploitation probability", "Validated KEV prediction", "Security or patching advice"],
             "training_source": "Original fictional generator", "target": experiment.report["target"],
             "limitations": ["Synthetic generation assumptions", "Explored development windows; no final holdout", "No real-data training approval"],
