@@ -15,7 +15,8 @@ ENV PATH=/opt/venv/bin:$PATH PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 SIGNAL
 WORKDIR /app
 COPY --from=build /opt/venv /opt/venv
 COPY --from=build /app/signalrank /app/signalrank
-COPY --from=build /app/demo-artifact /app/demo-artifact
+COPY --from=build /app/demo-artifact/runs /app/demo-artifact/runs
+COPY --from=build /app/demo-artifact/selection.json /app/demo-artifact/selection.json
 RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin signalrank
 USER 10001
 EXPOSE 10000
