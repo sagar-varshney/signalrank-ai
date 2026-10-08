@@ -24,8 +24,10 @@ from signalrank.history import ExperimentStore, snapshot
 from signalrank.temporal import evaluate
 from signalrank.reliability import build as reliability
 from signalrank.reporting import markdown
+from signalrank.replay import build as replay
+from signalrank.challenge import build as challenge
 
-CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py"}
+CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py", "replay.py", "challenge.py"}
 
 
 def runtime():
@@ -50,6 +52,8 @@ def train(config, root=Path("artifacts")):
         experiment.report["diagnostics"] = diagnostics(experiment)
         experiment.report["benchmark"] = benchmark(*split(generate(config.seed, config.count)), config)
         experiment.report["reliability"] = reliability(experiment)
+        experiment.report["replay"] = replay(experiment)
+        experiment.report["challenge"] = challenge()
         joblib.dump(experiment, directory / "model.joblib", compress=3)
         write_json(directory / "report.json", experiment.report)
         write_json(directory / "model-card.json", {

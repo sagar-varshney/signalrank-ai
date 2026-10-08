@@ -2,6 +2,12 @@
 
 Review date: 2026-10-04. This engineering review is not a legal opinion or assurance of zero risk.
 
+## Replay, challenge and verification extension (2026-10-08)
+
+The replay and challenge generators are original fictional simulations, not new external sources. Concept-shift cases deliberately define new synthetic outcomes and are separate from the earlier label-preserving reliability probes. No real-data training/display/redistribution permission, pretrained weights, hosted service, telemetry or public deployment is introduced. Checkpoint exports hide future records and immature outcomes; full-run retrospective summaries are explicitly labeled. These are engineering safeguards, not legal or accuracy certification.
+
+Python dependency resolution and package hashes are pinned in `uv.lock`, alongside the existing pnpm lock. Pinning is not a license audit or cross-platform numerical guarantee. Playwright is a test-only Apache-2.0 dependency, not a bundled browser runtime in the app. Installing its test browser downloads separately distributed browser components; their applicable notices/terms still need review for any redistribution. Tests launch an isolated loopback-only service with temporary original synthetic artifacts. Real-data and public-release gates below remain unchanged.
+
 ## Approved local scope
 
 Training uses original synthetic records only. Official CVE and CISA KEV copies are scoped to a bounded local feasibility audit, not public deployment or release of datasets/models. No linked articles, exploits, logos, scanning, customer uploads, trackers or remote model services are used.

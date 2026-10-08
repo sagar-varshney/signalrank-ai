@@ -13374,8 +13374,735 @@ function tn() {
 	});
 }
 //#endregion
+//#region src/Replay.tsx
+var nn = (e) => e == null ? "Unavailable" : e.toFixed(4), rn = (e) => e == null ? "Unavailable" : (e * 100).toFixed(1) + "%", an = {
+	severity: "Severity",
+	description: "Description category",
+	remote: "Remote",
+	authentication_required: "Authentication required",
+	prediction: "Predicted probability"
+};
+function on(e) {
+	let t = () => location.hash.slice(1).split(/[/?]/)[0] === e, [n, r] = (0, y.useState)(t);
+	return (0, y.useEffect)(() => {
+		let e = () => r(t());
+		return window.addEventListener("hashchange", e), window.addEventListener("signalrank:view", e), () => {
+			window.removeEventListener("hashchange", e), window.removeEventListener("signalrank:view", e);
+		};
+	}, [e]), n;
+}
+function sn({ run: e, metric: t, index: n, threshold: r }) {
+	let i = e.checkpoints.map((e, r) => ({
+		i: r,
+		value: r > n ? null : t === "brier" ? e.metrics?.brier_score ?? null : Math.max(...e.drift.filter((e) => e.feature !== "prediction" && e.distance !== null).map((e) => e.distance), 0)
+	})), a = (e) => 55 + e / Math.max(1, i.length - 1) * 545, o = (e) => 240 - e * 200;
+	return /* @__PURE__ */ (0, b.jsxs)("svg", {
+		className: "replay-chart",
+		viewBox: "0 0 640 295",
+		role: "img",
+		"aria-label": t === "drift" ? "Maximum input distance by simulated week" : "Cumulative Brier score on mature outcomes by simulated week",
+		children: [
+			[
+				0,
+				.25,
+				.5,
+				.75,
+				1
+			].map((e) => /* @__PURE__ */ (0, b.jsxs)("g", { children: [/* @__PURE__ */ (0, b.jsx)("line", {
+				x1: "55",
+				x2: "600",
+				y1: o(e),
+				y2: o(e),
+				stroke: "var(--line)"
+			}), /* @__PURE__ */ (0, b.jsx)("text", {
+				x: "42",
+				y: o(e) + 4,
+				textAnchor: "end",
+				children: e
+			})] }, e)),
+			t === "drift" && /* @__PURE__ */ (0, b.jsx)("line", {
+				x1: "55",
+				x2: "600",
+				y1: o(r),
+				y2: o(r),
+				stroke: "var(--muted)",
+				strokeDasharray: "5 4"
+			}),
+			e.change_at && e.change_at <= e.checkpoints[n].as_of && /* @__PURE__ */ (0, b.jsx)("line", {
+				x1: a(e.checkpoints.findIndex((t) => t.as_of >= e.change_at)),
+				x2: a(e.checkpoints.findIndex((t) => t.as_of >= e.change_at)),
+				y1: "30",
+				y2: "240",
+				stroke: "var(--control)",
+				strokeDasharray: "2 4"
+			}),
+			/* @__PURE__ */ (0, b.jsx)("polyline", {
+				points: i.filter((e) => e.value !== null).map((e) => `${a(e.i)},${o(e.value)}`).join(" "),
+				fill: "none",
+				stroke: "var(--accent)",
+				strokeWidth: "2"
+			}),
+			i.filter((e) => e.value !== null).map((t) => /* @__PURE__ */ (0, b.jsx)("circle", {
+				cx: a(t.i),
+				cy: o(t.value),
+				r: t.i === n ? 6 : 3,
+				fill: t.i === n ? "var(--hero-accent)" : "var(--accent)",
+				children: /* @__PURE__ */ (0, b.jsxs)("title", { children: [
+					e.checkpoints[t.i].as_of,
+					": ",
+					nn(t.value)
+				] })
+			}, t.i)),
+			/* @__PURE__ */ (0, b.jsx)("text", {
+				x: "55",
+				y: "267",
+				children: e.checkpoints[0].as_of
+			}),
+			/* @__PURE__ */ (0, b.jsx)("text", {
+				x: "600",
+				y: "267",
+				textAnchor: "end",
+				children: e.checkpoints.at(-1).as_of
+			}),
+			/* @__PURE__ */ (0, b.jsx)("text", {
+				x: "325",
+				y: "290",
+				textAnchor: "middle",
+				children: "Simulated checkpoint date · not wall-clock time"
+			})
+		]
+	});
+}
+function cn() {
+	let e = on("replay"), t = vt({
+		queryKey: ["replay"],
+		queryFn: ({ signal: e }) => xt("/api/replay", e),
+		enabled: e
+	}), [n, r] = (0, y.useState)("stable"), [i, a] = (0, y.useState)(2718), [o, s] = (0, y.useState)(-1), [c, l] = (0, y.useState)(0), [u, d] = (0, y.useState)("drift"), f = t.data, p = f?.runs?.find((e) => e.id === n && e.seed === i), m = p ? o < 0 ? p.checkpoints.length - 1 : Math.min(o, p.checkpoints.length - 1) : 0, h = new URLSearchParams({
+		scenario: n,
+		seed: String(i),
+		checkpoint: String(m)
+	}), g = vt({
+		queryKey: [
+			"replay-checkpoint",
+			n,
+			i,
+			m,
+			c
+		],
+		queryFn: ({ signal: e }) => xt("/api/replay/checkpoint?" + h + "&offset=" + c * 25 + "&limit=25", e),
+		enabled: e && !!p
+	});
+	if (t.error) return /* @__PURE__ */ (0, b.jsx)(un, {
+		message: t.error.message,
+		retry: () => void t.refetch()
+	});
+	if (!f) return /* @__PURE__ */ (0, b.jsx)("p", {
+		className: "experiment-empty",
+		role: "status",
+		children: "Loading saved replay evidence…"
+	});
+	if (f.status !== "available" || !p || !f.configuration) return /* @__PURE__ */ (0, b.jsxs)("p", {
+		className: "notice subtle",
+		children: [
+			f.warning,
+			" ",
+			/* @__PURE__ */ (0, b.jsx)("code", { children: "python -m signalrank.demo" })
+		]
+	});
+	let _ = p.checkpoints[m];
+	return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "lab-workspace replay-workspace",
+		children: [
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "notice subtle",
+				children: f.warning
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "FROZEN MODEL / SIMULATED CLOCK"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Rewind the evidence." })] }), /* @__PURE__ */ (0, b.jsx)("a", {
+							className: "button",
+							href: "/api/replay/export?" + h,
+							download: !0,
+							children: "Export this checkpoint"
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "replay-controls",
+						children: [
+							/* @__PURE__ */ (0, b.jsxs)("label", { children: ["Replay scenario", /* @__PURE__ */ (0, b.jsx)("select", {
+								value: n,
+								onChange: (e) => {
+									r(e.target.value), l(0);
+								},
+								children: Array.from(new Map(f.runs.map((e) => [e.id, e.name]))).map(([e, t]) => /* @__PURE__ */ (0, b.jsx)("option", {
+									value: e,
+									children: t
+								}, e))
+							})] }),
+							/* @__PURE__ */ (0, b.jsxs)("label", { children: ["Simulation seed", /* @__PURE__ */ (0, b.jsx)("select", {
+								value: i,
+								onChange: (e) => {
+									a(Number(e.target.value)), l(0);
+								},
+								children: f.configuration.seeds.map((e) => /* @__PURE__ */ (0, b.jsx)("option", { children: e }, e))
+							})] }),
+							/* @__PURE__ */ (0, b.jsxs)("label", { children: ["Timeline metric", /* @__PURE__ */ (0, b.jsxs)("select", {
+								value: u,
+								onChange: (e) => d(e.target.value),
+								children: [/* @__PURE__ */ (0, b.jsx)("option", {
+									value: "drift",
+									children: "Maximum input distance"
+								}), /* @__PURE__ */ (0, b.jsx)("option", {
+									value: "brier",
+									children: "Mature cumulative Brier ↓"
+								})]
+							})] })
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsx)(sn, {
+						run: p,
+						metric: u,
+						index: m,
+						threshold: f.configuration.drift_threshold
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("label", {
+						className: "replay-slider",
+						htmlFor: "replay-position",
+						children: [
+							"Simulated checkpoint ",
+							/* @__PURE__ */ (0, b.jsx)("output", { children: _.as_of }),
+							/* @__PURE__ */ (0, b.jsx)("input", {
+								id: "replay-position",
+								type: "range",
+								min: "0",
+								max: p.checkpoints.length - 1,
+								value: m,
+								onChange: (e) => {
+									s(Number(e.target.value)), l(0);
+								}
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							u === "drift" ? "Dashed horizontal line: illustrative input-alert threshold. Prediction drift is reported separately below." : "Only matured outcomes contribute. Cumulative scores can hide or lag recent degradation; they are not a performance alarm.",
+							" ",
+							p.change_at ? `Dotted vertical line: scheduled generator change at ${p.change_at}.` : "No generator change is scheduled in this control."
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "metrics replay-metrics",
+						children: [
+							/* @__PURE__ */ (0, b.jsx)(ln, {
+								label: "Records seen",
+								value: _.seen
+							}),
+							/* @__PURE__ */ (0, b.jsx)(ln, {
+								label: "Mature outcomes",
+								value: _.mature
+							}),
+							/* @__PURE__ */ (0, b.jsx)(ln, {
+								label: "Pending outcomes",
+								value: _.pending
+							}),
+							/* @__PURE__ */ (0, b.jsx)(ln, {
+								label: "Mature average precision",
+								value: nn(_.metrics?.average_precision)
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Labels are withheld for ",
+							f.configuration.horizon_days,
+							" days, including early positives. No future records or immature outcomes appear in the checkpoint ledger. Metrics require ",
+							f.configuration.minimum_support,
+							" mature records and both classes—a display guard, not proof of statistical adequacy."
+						]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "FIXED REFERENCE / CURRENT WEEK"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "A shift is a question, not a verdict." })] }), /* @__PURE__ */ (0, b.jsxs)("span", {
+							className: "badge",
+							children: [
+								_.window_first,
+								" → ",
+								_.as_of
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "Checkpoint distribution drift",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Distribution" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Reference / current n"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "JS distance"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Indicator" })
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: _.drift.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: an[e.feature] }),
+							/* @__PURE__ */ (0, b.jsxs)("td", {
+								className: "numeric",
+								children: [
+									e.reference_count,
+									" / ",
+									e.current_count
+								]
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: nn(e.distance)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.alert === null ? "Insufficient support" : e.alert ? "Distribution warning" : "Below threshold" })
+						] }, e.feature)) })] })
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Training inputs are the fixed reference. Severity uses nine fixed bins; probabilities use ten. Jensen-Shannon distance uses base 2. Threshold ",
+							f.configuration.drift_threshold.toFixed(2),
+							" is prespecified for this demonstration; it is not a calibrated false-alarm guarantee. Unchanged inputs can coexist with a changed outcome relationship."
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("details", { children: [/* @__PURE__ */ (0, b.jsx)("summary", { children: "Full-run alert accounting — retrospective simulation evidence" }), /* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							p.alert_evidence.prechange_input_alerts,
+							" input-warning windows out of ",
+							p.alert_evidence.prechange_windows,
+							" no-change/pre-change windows. Input-warning delay: ",
+							p.alert_evidence.detection_delay_days === null ? "Not detected / not applicable" : p.alert_evidence.detection_delay_days + " simulated days",
+							". ",
+							p.alert_evidence.interpretation,
+							" This accounting uses the whole saved run, not only the selected checkpoint."
+						]
+					})] })
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "WEEK-CLOSE RANKING / MATURE COHORTS ONLY"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "What did the review budget capture?" })] }), /* @__PURE__ */ (0, b.jsxs)("span", {
+							className: "badge",
+							children: [_.closed_weeks, " mature weeks"]
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Up to ",
+							f.configuration.weekly_budget,
+							" records per seven-day replay cohort, selected at week close without outcomes. A cohort enters this table only when its final record has matured. This is a simulated weekly policy—not the older whole-test top-50 metric."
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "Mature weekly review policies",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Policy" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Reviewed / population"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Captured / positives"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Missed"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Precision"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Recall"
+							})
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: _.policies.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.name === "model" ? "Frozen model" : "Severity baseline" }),
+							/* @__PURE__ */ (0, b.jsxs)("td", {
+								className: "numeric",
+								children: [
+									e.reviewed,
+									" / ",
+									e.population
+								]
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: _.closed_weeks ? e.captured + " / " + e.positives : "Pending"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: _.closed_weeks ? e.missed : "Pending"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: rn(e.precision)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: rn(e.recall)
+							})
+						] }, e.name)) })] })
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Random selection expected captured positives: ",
+							_.random_expected_captured === null ? "Pending" : _.random_expected_captured.toFixed(2),
+							". Analytical expectation over the same mature weeks, not an observed run."
+						]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsx)("h2", { children: "Prediction ledger at this checkpoint" }), /* @__PURE__ */ (0, b.jsx)("span", {
+							className: "caption",
+							children: "Saved before label disclosure"
+						})]
+					}),
+					g.error ? /* @__PURE__ */ (0, b.jsx)(un, {
+						message: g.error.message,
+						retry: () => void g.refetch()
+					}) : g.data ? /* @__PURE__ */ (0, b.jsxs)(b.Fragment, { children: [/* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "As-of prediction ledger",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Fictional record" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Predicted at" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Probability"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Label available at" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "As-of outcome" })
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: g.data.records.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.id }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.observed_at }),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: rn(e.probability)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.outcome_available_at }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.outcome === null ? "Pending" : e.outcome ? "Positive" : "Negative" })
+						] }, e.id)) })] })
+					}), /* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "pagination",
+						children: [
+							/* @__PURE__ */ (0, b.jsx)("button", {
+								className: "button",
+								disabled: c === 0,
+								onClick: () => l(c - 1),
+								children: "Previous records"
+							}),
+							/* @__PURE__ */ (0, b.jsxs)("span", {
+								className: "caption",
+								children: [
+									g.data.total,
+									" seen · page ",
+									c + 1
+								]
+							}),
+							/* @__PURE__ */ (0, b.jsx)("button", {
+								className: "button",
+								disabled: (c + 1) * 25 >= g.data.total,
+								onClick: () => l(c + 1),
+								children: "Next records"
+							})
+						]
+					})] }) : /* @__PURE__ */ (0, b.jsx)("p", {
+						role: "status",
+						children: "Loading checkpoint ledger…"
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption replay-fingerprint",
+						children: [
+							"Prediction ledger SHA-256: ",
+							p.prediction_sha256,
+							". Fingerprint covers the whole input-only prediction run, not authenticity or tamper-proof storage. Snapshot: ",
+							f.snapshot_id,
+							"."
+						]
+					})
+				]
+			})
+		]
+	});
+}
+function ln({ label: e, value: t }) {
+	return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "metric",
+		children: [/* @__PURE__ */ (0, b.jsx)("span", {
+			className: "metric-label",
+			children: e
+		}), /* @__PURE__ */ (0, b.jsx)("strong", {
+			className: "metric-value",
+			children: t
+		})]
+	});
+}
+function un({ message: e, retry: t }) {
+	return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "experiment-error",
+		role: "alert",
+		children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("strong", { children: "Saved evidence unavailable" }), /* @__PURE__ */ (0, b.jsx)("p", { children: e })] }), /* @__PURE__ */ (0, b.jsx)("button", {
+			className: "button",
+			onClick: t,
+			children: "Try again"
+		})]
+	});
+}
+var dn = {
+	logistic: "Standardized logistic",
+	trees: "Histogram boosted trees",
+	prevalence: "Training prevalence"
+};
+function fn() {
+	let e = vt({
+		queryKey: ["challenge"],
+		queryFn: ({ signal: e }) => xt("/api/challenge", e),
+		enabled: on("challenge")
+	}), [t, n] = (0, y.useState)("linear");
+	if (e.error) return /* @__PURE__ */ (0, b.jsx)(un, {
+		message: e.error.message,
+		retry: () => void e.refetch()
+	});
+	if (!e.data) return /* @__PURE__ */ (0, b.jsx)("p", {
+		className: "experiment-empty",
+		role: "status",
+		children: "Loading offline challenge evidence…"
+	});
+	let r = e.data;
+	return r.status !== "available" || !r.configuration || !r.items || !r.summary ? /* @__PURE__ */ (0, b.jsxs)("p", {
+		className: "notice subtle",
+		children: [
+			r.warning,
+			" ",
+			/* @__PURE__ */ (0, b.jsx)("code", { children: "python -m signalrank.demo" })
+		]
+	}) : /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "lab-workspace",
+		children: [
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "notice subtle",
+				children: r.warning
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "FOUR CASES / THREE SEEDS / FIXED CANDIDATES"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Challenge the assumptions." })] }), /* @__PURE__ */ (0, b.jsx)("a", {
+							className: "button",
+							href: "/api/challenge",
+							download: "signalrank-challenges.json",
+							children: "Export all evidence"
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("label", { children: ["Challenge case", /* @__PURE__ */ (0, b.jsx)("select", {
+						value: t,
+						onChange: (e) => n(e.target.value),
+						children: Array.from(new Map(r.items.map((e) => [e.case, e.name]))).map(([e, t]) => /* @__PURE__ */ (0, b.jsx)("option", {
+							value: e,
+							children: t
+						}, e))
+					})] }),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: r.configuration.definitions[t]
+					}),
+					/* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "Challenge seed summary",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Candidate" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Seeds"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Mean AP"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "AP seed SD"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Mean Brier ↓"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Mean recall@50"
+							})
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: r.summary.filter((e) => e.case === t).map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: dn[e.candidate] }),
+							/* @__PURE__ */ (0, b.jsxs)("td", {
+								className: "numeric",
+								children: [e.evaluated_seeds, " / 3"]
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: nn(e.metrics?.average_precision.mean)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: nn(e.metrics?.average_precision.seed_sd)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: nn(e.metrics?.brier_score.mean)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: e.metrics ? rn(e.metrics.recall_at_50.mean) : "Unavailable"
+							})
+						] }, e.candidate)) })] })
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: "Every seed is retained. Seed SD is variability over three fictional datasets, not a confidence interval. No best-model badge or automatic promotion. These numeric categories do not test natural-language generalization."
+					})
+				]
+			}),
+			r.items.filter((e) => e.case === t).map((e) => /* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("h2", { children: ["Seed ", e.seed] }), /* @__PURE__ */ (0, b.jsx)("span", {
+							className: "badge",
+							children: e.status
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("div", {
+						className: "replay-splits",
+						children: Object.entries(e.splits).map(([e, t]) => /* @__PURE__ */ (0, b.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, b.jsx)("span", {
+								className: "overline",
+								children: e
+							}),
+							/* @__PURE__ */ (0, b.jsxs)("strong", { children: [
+								t.count,
+								" records · ",
+								t.positives,
+								" positives"
+							] }),
+							/* @__PURE__ */ (0, b.jsxs)("p", {
+								className: "caption",
+								children: [
+									t.first,
+									" → ",
+									t.last
+								]
+							})
+						] }, e))
+					}),
+					e.reason ? /* @__PURE__ */ (0, b.jsx)("p", {
+						className: "notice subtle",
+						children: e.reason
+					}) : /* @__PURE__ */ (0, b.jsx)(jt, {
+						label: "Challenge seed " + e.seed,
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Candidate" }),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Calibrated AP"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Calibrated Brier ↓"
+							}),
+							/* @__PURE__ */ (0, b.jsx)("th", {
+								className: "numeric",
+								children: "Recall@50"
+							})
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: e.items.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: dn[e.candidate] }),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: nn(e.calibrated.average_precision)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: nn(e.calibrated.brier_score)
+							}),
+							/* @__PURE__ */ (0, b.jsx)("td", {
+								className: "numeric",
+								children: rn(e.calibrated.recall_at_50)
+							})
+						] }, e.candidate)) })] })
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption replay-fingerprint",
+						children: ["Dataset SHA-256: ", e.dataset_sha256]
+					})
+				]
+			}, e.seed)),
+			/* @__PURE__ */ (0, b.jsxs)("details", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("summary", { children: "Fixed inputs, candidate parameters and protocol" }),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Both learned candidates receive ",
+							r.configuration.features.join(", "),
+							". Preprocessing/classifiers fit on earlier training rows; separate sigmoid calibration fits on later calibration rows. Thirty-day maturity gaps separate partitions. Budget 50 applies to the entire mature evaluation cohort."
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("pre", { children: JSON.stringify(r.configuration.parameters, null, 2) }),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Protocol: ",
+							r.protocol,
+							". This public explored suite is development evidence, not a final untouched test."
+						]
+					})
+				]
+			})
+		]
+	});
+}
+//#endregion
 //#region src/main.tsx
-var nn = class extends y.Component {
+var pn = class extends y.Component {
 	state = { failed: !1 };
 	static getDerivedStateFromError() {
 		return { failed: !0 };
@@ -13391,22 +14118,24 @@ var nn = class extends y.Component {
 			})]
 		}) : this.props.children;
 	}
-}, rn = new it({ defaultOptions: { queries: {
+}, mn = new it({ defaultOptions: { queries: {
 	retry: !1,
 	refetchOnWindowFocus: !1
-} } }), an = document.getElementById("experiments-root");
-an && (0, bt.createRoot)(an).render(/* @__PURE__ */ (0, b.jsx)(nn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-	client: rn,
+} } }), hn = document.getElementById("experiments-root");
+hn && (0, bt.createRoot)(hn).render(/* @__PURE__ */ (0, b.jsx)(pn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+	client: mn,
 	children: /* @__PURE__ */ (0, b.jsx)(qt, {})
 }) }));
 for (let [e, t] of [
 	["diagnostics-root", Rt],
 	["inference-root", Vt],
-	["reliability-root", tn]
+	["reliability-root", tn],
+	["replay-root", cn],
+	["challenge-root", fn]
 ]) {
 	let n = document.getElementById(e);
-	n && (0, bt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(nn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-		client: rn,
+	n && (0, bt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(pn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+		client: mn,
 		children: /* @__PURE__ */ (0, b.jsx)(t, {})
 	}) }));
 }

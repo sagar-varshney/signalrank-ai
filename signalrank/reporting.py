@@ -33,6 +33,29 @@ def markdown(report, provenance):
                 m = point.get("evaluation")
                 values = f'{m["average_precision"]:.6f} | {m["brier_score"]:.6f}' if m else "Unavailable | Unavailable"
                 lines.append(f'| {fold["fold"]} | {point["train_count"]} | {point["train_last"]} | {values} |')
-    lines += ["", "## Architecture", "", "Original generator → past-only training/preprocessing → later sigmoid calibration → mature evaluation → offline reliability probes → trusted local artifact → read-only API/React evidence views.",
+    replay = report.get("replay")
+    if replay:
+        lines += ["", "## Simulated-time replay", "", replay["warning"], "",
+                  "| Scenario | Seed | Mature / pending | AP | Brier | Model captured / positives |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
+        for run in replay["runs"]:
+            point = run["checkpoints"][-1]
+            m, policy = point["metrics"], point["policies"][0]
+            values = f'{m["average_precision"]:.6f} | {m["brier_score"]:.6f}' if m else "Unavailable | Unavailable"
+            lines.append(f'| {run["name"]} | {run["seed"]} | {point["mature"]} / {point["pending"]} | {values} | {policy["captured"]} / {policy["positives"]} |')
+        lines += ["", "Weekly budget applies at week close, once per record; policy results include only wholly mature weekly cohorts. Random selection is an analytical expectation, not an observed policy run."]
+    else:
+        lines += ["", "Simulated-time replay unavailable in this snapshot."]
+    challenge = report.get("challenge")
+    if challenge:
+        lines += ["", "## Prespecified synthetic challenges", "", challenge["warning"], "",
+                  "| Case | Candidate | Evaluated seeds | Mean AP | AP seed SD | Mean Brier |", "| --- | --- | ---: | ---: | ---: | ---: |"]
+        for item in challenge["summary"]:
+            m = item["metrics"]
+            sd = f'{m["average_precision"]["seed_sd"]:.6f}' if m and m["average_precision"]["seed_sd"] is not None else "Unavailable"
+            values = f'{m["average_precision"]["mean"]:.6f} | {sd} | {m["brier_score"]["mean"]:.6f}' if m else "Unavailable | Unavailable | Unavailable"
+            lines.append(f'| {item["name"]} | {item["candidate"]} | {item["evaluated_seeds"]} | {values} |')
+    else:
+        lines += ["", "Synthetic challenge suite unavailable in this snapshot."]
+    lines += ["", "## Architecture", "", "Original generator → past-only training/preprocessing → later sigmoid calibration → mature evaluation → offline reliability, replay and challenge evidence → trusted local artifact → read-only API/React evidence views.",
               "", "## Limitations", "", "All windows are synthetic development data. No real-data training or redistribution permission is granted. Checksums detect accidental changes, not malicious replacement. Public multi-user deployment is not supported.", ""]
     return "\n".join(lines)

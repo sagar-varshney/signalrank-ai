@@ -4,6 +4,17 @@ A Python rare-event forecasting application. Version 0.1 is a working, entirely 
 
 ## Run locally
 
+For the pinned development/test environment, install uv 0.12.23 from PyPI, then:
+
+```sh
+uv sync --locked --extra test --python 3.13
+.venv/bin/python -m signalrank.demo
+# Verify a new temporary synthetic run, exact model reload and exports:
+.venv/bin/python -m signalrank.verify
+```
+
+`uv.lock` pins the Python dependency graph with distribution hashes and Python/platform markers. CI uses this locked environment; changing dependencies requires explicitly updating the lock. Hashes are integrity checks, not a license/security certification or a bit-identical cross-hardware guarantee. `requirements-local.lock.txt` remains an older historical environment snapshot, not the recommended install. `uv sync` manages `.venv`; use a separate `UV_PROJECT_ENVIRONMENT` path to preserve another environment. The pip workflow below remains an unpinned alternative.
+
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[test]'
@@ -66,7 +77,7 @@ Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the databas
 - `GET /api/experiments/{id}`: complete saved report, provenance and top-100 forecasts; also the UI's JSON export.
 - `#experiments/{id}` → `#forecasts/{id}`: inspect saved context and forecast factors without replacing them with the current model's output.
 
-The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the original snapshot code fingerprint covers `core.py`, not the entire repository. Snapshots containing reliability probes additionally record that module's code hash and protocol. Separately, offline inference artifacts fingerprint eight modules: core, temporal, training, diagnostics, benchmark, uncertainty, reliability and reporting. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide missing analyses.
+The comparison panel displays descriptive deltas only when dataset fingerprint, target, horizon and temporal partitions match. These are not significance tests or real-world performance claims. Report snapshots do **not** include model weights or full training datasets; the original snapshot code fingerprint covers `core.py`, not the entire repository. Snapshots containing reliability probes additionally record that module's code hash and protocol. Separately, offline inference artifacts fingerprint ten modules: core, temporal, training, diagnostics, benchmark, uncertainty, reliability, reporting, replay and challenge. Schema-v2 snapshots also preserve complete synthetic evaluation IDs, dates, outcomes and probabilities for paired comparison, separately from the top-100 forecast export. Older snapshots remain readable but cannot provide missing analyses.
 
 ### One-command demo and Model Reliability
 
@@ -86,13 +97,13 @@ The command creates a new run under `artifacts/demo/runs/`, exports `experiment-
 - Held-out global permutation importance for description, severity, remote and authentication-required inputs. Description is one raw-input group, not a token explanation. Twenty seeded shuffles per column report signed mean AP drop and Brier increase, plus shuffle standard deviation. SD is not a confidence interval; correlated inputs can distort rankings. No feature selection or causal claim is made.
 - Temporal learning curves at earliest 25/50/75/100% of complete training days within each of the three purged walk-forward folds. All points in a fold use identical later calibration/evaluation records. Every point refits preprocessing, classifier and calibrator. Unsupported classes are marked unavailable. In-sample scores are retrospective diagnostics; more historical data also changes recency. No test-based tuning or winner selection occurs.
 
-All seeds, scenario definitions, support counts, metrics and per-fold dates are exportable as JSON. `/api/export/report` downloads a portable Markdown report for the current saved snapshot with its ID/runtime and scope caveats. Each offline artifact also has a derived Markdown report containing artifact/run IDs and eight-module hashes; `report.json` remains the manifest-verified source of truth. Markdown is a convenience export, not a separately signed audit record.
+All seeds, scenario definitions, support counts, metrics and per-fold dates are exportable as JSON. `/api/export/report` downloads a portable Markdown report for the current saved snapshot with its ID/runtime and scope caveats. Each offline artifact also has a derived Markdown report containing artifact/run IDs and ten-module hashes; `report.json` remains the manifest-verified source of truth. Markdown is a convenience export, not a separately signed audit record.
 
 **Artifact compatibility:** this milestone adds training-code hashes and changes the training implementation. Existing artifact directories are preserved, but strict loading rejects the old code/provenance. Retrain with the current checkout, or use the original checkout/environment to inspect an older model. Archived report snapshots remain readable. Determinism is scoped to recorded configuration/code/runtime; software dependency ranges are not a Python lockfile.
 
 ### React implementation
 
-Experiments, Model diagnostics, Model reliability and Batch inference are implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
+Experiments, Model diagnostics, Model reliability, Time replay, Synthetic challenges and Batch inference are implemented in React and TypeScript, with TanStack Query for cancellable requests and Vite for the build. FastAPI remains the only application server; the other five views retain their existing implementation. Node.js is a build tool, not a second backend. Compiled assets are checked in and included in the Python package, so the normal Python startup needs no Node installation or CDN access.
 
 Select any two snapshots, even across pages, to compare AP, Brier score and recall@50. Selections and search/page state persist in the URL. Incompatible datasets, targets, modes, horizons or evaluation partitions produce explicit reasons and suppress metric deltas. Export the comparison as JSON, inspect each snapshot's configuration, runtime and code/data fingerprints, or follow its saved forecasts. Older reports display missing configuration as unrecorded rather than inventing values. Loading, empty, missing-snapshot and retry states are explicit; late responses cannot overwrite a newly selected snapshot.
 
@@ -115,6 +126,30 @@ The editorial refresh takes broad layout inspiration from [Penmanship](https://g
 Light, Dark and System modes retain the existing pre-paint theme script and local preference key. System follows operating-system changes without a reload; explicit modes remain fixed and storage failures fall back safely. A sticky header keeps appearance controls reachable. Tests execute the shipped HTML/theme/navigation scripts and check both palette definitions for primary text/action contrast; these targeted checks are not a full accessibility certification. Frontend test-only TypeScript definitions for jsdom are pinned in the pnpm lockfile; no new browser runtime dependency or external font/asset request is added.
 
 ## Model lab
+
+### Time replay and distribution monitoring
+
+`#replay` reads `/api/replay`; the new offline demo saves nine frozen-model runs (three scenarios × seeds 2718, 3141, 1618). Each starts after the original generated observation interval, creates 12 original fictional records per day for 182 days, and leaves the final 30 days pending. Inputs/predictions are saved without outcomes; all labels, including early positives, are withheld until observation plus 30 days. The API never refits, simulates or recalibrates on a request. Timeline plots and the paginated ledger are masked to the selected checkpoint. Full-run alert accounting is separately labeled retrospective evidence.
+
+No-shift control, input-distribution shift, and outcome-relationship shift have prespecified definitions in [RESEARCH-PROTOCOL.md](RESEARCH-PROTOCOL.md). Control/concept cases share identical inputs and predictions; only the generator's outcome formula changes at day 91. The frozen model can deteriorate even without input drift. The input-shift case changes incoming severity/remote distributions at day 91; it generates new records rather than relabeling the earlier stress-test cohort.
+
+Monitoring compares each complete seven-day cohort with the model's original training inputs. Base-2 Jensen-Shannon distance uses nine fixed severity bins, ten probability bins and fixed categorical supports; illustrative threshold .20, minimum 60 current records. Prediction drift is separate from input-alert accounting. Pre-change/no-shift warning-window counts and first input-warning delay in a wholly post-change week are retained for every seed. These are simulation measurements, not validated false-alarm guarantees, statistical significance or evidence that drift implies failure. Mature cumulative AP/Brier track measured performance, not an automatic performance alarm; cumulative scores can lag or hide recent degradation.
+
+Up to 15 records are reviewed per seven-day replay cohort at **week close**, not on each arrival. Frozen-model and severity policies rank identical records once without labels. Policy results include only wholly mature weekly cohorts; remaining cohorts are pending. Random selection is an analytical expectation on those same cohorts, not an observed policy run. This is distinct from the older whole-test top-50 simulator and not a claim of real operational benefit.
+
+`GET /api/replay/checkpoint?scenario=stable&seed=2718&checkpoint=0&offset=0&limit=25` exposes only records already seen and matured labels; `GET /api/replay/export` with the same scenario/seed/checkpoint exports the full as-of ledger and evidence. Bounds and unknown runs fail explicitly. The full offline report includes all saved checkpoints and the final masked ledger; it is retrospective development evidence, not an access-controlled historical database.
+
+### Prespecified synthetic challenges
+
+`#challenge` / `/api/challenge` reports linear control, nonlinear interactions, noisy measurements and a changed outcome relationship, each with seeds 101/202/303 and 3,600 fictional rows. Standardized logistic regression, histogram boosted trees and training-prevalence baseline share the same numeric inputs and purged chronological partitions. Irrelevant Gaussian noise is included. Each learned candidate receives its own sigmoid calibration on the later calibration partition. Fixed parameters, generator definitions, partition dates/counts/positives, dataset hashes, all per-seed results and descriptive mean/seed SD are exported. No winner is selected, promoted or fitted on API requests. Three-seed SD is not a confidence interval. The public explored suite is development evidence, not an untouched final benchmark or a natural-language generalization test.
+
+### Clean-install and browser verification
+
+`python -m signalrank.verify` trains a new temporary synthetic run, verifies trusted reload, compares every mature baseline probability bit-for-bit against a fresh deterministic experiment in that environment, checks the saved JSON/report and confirms replay/challenge coverage. Temporary verification runs are cleaned automatically; user demo artifacts are preserved.
+
+Inside `frontend/`, run `pnpm exec playwright install chromium` once, then `pnpm test:e2e`. Playwright launches an isolated loopback server on port 8026 with a temporary synthetic artifact/history database. It refuses to reuse an existing server and never accesses the user's demo history. Optional `SIGNALRANK_E2E_PYTHON` selects an absolute Python executable; default is the project's `.venv`. Real-browser checks cover all 11 routes, Light/Dark/System persistence and OS updates, replay rewind/export/scenario/seed changes, all challenge seeds and 320px mobile navigation. CI separately runs Python/unit/build/package checks and clean-install/browser verification. Test-only Playwright and its browser installation do not become dashboard runtime dependencies.
+
+**Compatibility:** ten-module code checks now include replay/challenge. Older model directories and SQLite reports are preserved, but the strict loader rejects previous code provenance. Train a new local artifact with the current checkout, or use the old checkout/environment for old artifacts. The fresh demo generated for this milestone contains the new offline evidence; no real-data gate is changed.
 
 ### Full-cohort diagnostics
 
@@ -178,7 +213,7 @@ This command needs the same local license evidence as the audit and GitHub netwo
 
 Appearance can be set to Light, Dark or System from the header. It defaults to the operating-system preference and remembers an explicit choice locally; storage failures do not block the app. Both themes use shared semantic colors. Readability improvements include larger secondary text, 44px controls, visible focus indicators, a skip-to-content link, focus transfer to the active view heading, keyboard-scrollable table regions and a two-column mobile navigation. These are targeted accessibility improvements, not a full accessibility certification.
 
-The research workbench has nine views: Overview, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Model reliability, Batch inference and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
+The research workbench has 11 views: Overview, Dataset build, Data & validation, Experiments, Model evaluation, Model diagnostics, Model reliability, Time replay, Synthetic challenges, Batch inference and Forecast explorer. Validation supports identifier/status filters; forecasts support search within the top 100 records, score ordering and 15-row pagination. Empty results are explicit. Styling uses local assets only, system fonts, keyboard focus states and a narrow-screen layout. Synthetic results remain visibly separated from official-data evidence. Quick navigation is a native modal dialog with search, arrow-key/Enter navigation, Escape dismissal and focus containment.
 
 ### Historical validation milestone
 

@@ -9,5 +9,5 @@ export default defineConfig(({ command }) => ({
     emptyOutDir: true,
     lib: { entry: 'src/main.tsx', formats: ['es'], fileName: () => 'experiments.js', cssFileName: 'experiments' },
   },
-  test: { environment: 'jsdom', clearMocks: true },
+  test: { environment: 'jsdom', clearMocks: true, include: ['src/**/*.test.{ts,tsx}'] },
 }));

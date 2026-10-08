@@ -13,6 +13,8 @@ from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sampl
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
+from signalrank.replay import at_checkpoint
+from typing import Literal
 from pathlib import Path
 from urllib.parse import urlsplit
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -104,6 +106,52 @@ def export_report():
     return Response(markdown(saved["report"], {"snapshot_id": saved["id"],
                     "snapshot_created_at": saved["created_at"], **saved["provenance"]}),
                     media_type="text/markdown", headers={"Content-Disposition": 'attachment; filename="signalrank-experiment.md"'})
+
+
+@app.get("/api/replay")
+def replay_report():
+    result = app.state.experiment.report.get("replay")
+    if result is None:
+        return {"status": "unavailable", "warning": "No offline replay loaded. Run python -m signalrank.demo with the current checkout. No simulation or fitting occurs on requests."}
+    return {"status": "available", "snapshot_id": app.state.experiment_id,
+            **{k: v for k, v in result.items() if k != "runs"},
+            "runs": [{k: v for k, v in run.items() if k != "ledger"} for run in result["runs"]]}
+
+
+@app.get("/api/replay/checkpoint")
+def replay_checkpoint(scenario: Literal["stable", "input_shift", "concept_shift"] = "stable", seed: int = Query(default=2718),
+                      checkpoint: int = Query(default=0, ge=0, le=100), offset: int = Query(default=0, ge=0),
+                      limit: int = Query(default=25, ge=1, le=100)):
+    result = app.state.experiment.report.get("replay")
+    run = next((r for r in result["runs"] if r["id"] == scenario and r["seed"] == seed), None) if result else None
+    if run is None or checkpoint >= len(run["checkpoints"]):
+        raise HTTPException(404, "Saved replay checkpoint not found")
+    saved = at_checkpoint(run, checkpoint)
+    return {"snapshot_id": app.state.experiment_id, "protocol": result["protocol"], "configuration": result["configuration"],
+            "scenario": scenario, "seed": seed, "prediction_sha256": run["prediction_sha256"], "warning": result["warning"],
+            "checkpoint": saved["checkpoint"], "total": len(saved["records"]), "offset": offset,
+            "records": saved["records"][offset:offset + limit]}
+
+
+@app.get("/api/replay/export")
+def replay_export(scenario: Literal["stable", "input_shift", "concept_shift"] = "stable", seed: int = 2718,
+                  checkpoint: int = Query(default=0, ge=0, le=100)):
+    result = app.state.experiment.report.get("replay")
+    run = next((r for r in result["runs"] if r["id"] == scenario and r["seed"] == seed), None) if result else None
+    if run is None or checkpoint >= len(run["checkpoints"]):
+        raise HTTPException(404, "Saved replay checkpoint not found")
+    payload = {"snapshot_id": app.state.experiment_id, "protocol": result["protocol"], "configuration": result["configuration"],
+               "warning": result["warning"], "scenario": scenario, "seed": seed, "prediction_sha256": run["prediction_sha256"],
+               **at_checkpoint(run, checkpoint)}
+    return Response(json.dumps(payload, allow_nan=False), media_type="application/json",
+                    headers={"Content-Disposition": 'attachment; filename="signalrank-replay-checkpoint.json"'})
+
+
+@app.get("/api/challenge")
+def challenge_report():
+    result = app.state.experiment.report.get("challenge")
+    return {"status": "available", "snapshot_id": app.state.experiment_id, **result} if result else {
+        "status": "unavailable", "warning": "No offline challenge suite loaded. Run python -m signalrank.demo with the current checkout. No candidate fitting occurs on requests."}
 
 
 @app.get("/api/comparison")
