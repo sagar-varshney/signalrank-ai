@@ -39,7 +39,7 @@ function Waterfall({ prediction }: { prediction: Prediction }) {
   const x = (value: number) => 270 + (value - low) / Math.max(.1, high - low) * 370;
   return <div className="waterfall-scroll" role="region" aria-label="Complete log-odds waterfall, scroll for all nonzero factors" tabIndex={0}><svg viewBox={`0 0 760 ${bars.length * 28 + 36}`} style={{ height: bars.length * 28 + 36 }} role="img" aria-label="Intercept plus all feature contributions reconstructs the raw model score">
     <line x1={x(0)} x2={x(0)} y1="0" y2={bars.length * 28} stroke="var(--control)"/>
-    {bars.map((b, i) => <g key={i}><text x="255" y={i * 28 + 18} textAnchor="end">{featureName(b.feature).slice(0, 35)}</text><rect x={Math.min(x(b.start), x(b.end))} y={i * 28 + 5} width={Math.max(1, Math.abs(x(b.end) - x(b.start)))} height="18" rx="3" fill={i === bars.length - 1 ? 'var(--hero-accent)' : b.value >= 0 ? 'var(--accent)' : 'var(--muted)'}/><text x="655" y={i * 28 + 18}>{signed(b.value)}</text><title>{featureName(b.feature)}: {signed(b.value)}; cumulative {fixed(b.end)}</title></g>)}
+    {bars.map((b, i) => <g key={i}><text x="255" y={i * 28 + 18} textAnchor="end">{featureName(b.feature).slice(0, 35)}</text><rect x={Math.min(x(b.start), x(b.end))} y={i * 28 + 5} width={Math.max(1, Math.abs(x(b.end) - x(b.start)))} height="18" rx="0" fill={i === bars.length - 1 ? 'var(--hero-accent)' : b.value >= 0 ? 'var(--accent)' : 'var(--muted)'}/><text x="655" y={i * 28 + 18}>{signed(b.value)}</text><title>{featureName(b.feature)}: {signed(b.value)}; cumulative {fixed(b.end)}</title></g>)}
     <text x="270" y={bars.length * 28 + 24}>Log-odds, not probability percentage points</text>
   </svg></div>;
 }

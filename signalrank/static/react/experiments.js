@@ -12634,7 +12634,7 @@ function Xt({ items: e, metric: t }) {
 					y: 25 + r * 42,
 					width: i,
 					height: "22",
-					rx: "2",
+					rx: "0",
 					fill: e[t] >= 0 ? "var(--accent)" : "var(--muted)",
 					children: /* @__PURE__ */ (0, b.jsxs)("title", { children: [
 						Yt[e.feature],
@@ -14224,7 +14224,7 @@ function Tn({ prediction: e }) {
 						y: n * 28 + 5,
 						width: Math.max(1, Math.abs(i(e.end) - i(e.start))),
 						height: "18",
-						rx: "3",
+						rx: "0",
 						fill: n === t.length - 1 ? "var(--hero-accent)" : e.value >= 0 ? "var(--accent)" : "var(--muted)"
 					}),
 					/* @__PURE__ */ (0, b.jsx)("text", {

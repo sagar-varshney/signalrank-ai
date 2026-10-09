@@ -1,5 +1,26 @@
 import { test, expect } from '@playwright/test';
 
+test('Overview is the landing page and sharp corners persist across themes and workspaces', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveURL(/#overview$/);
+  await expect(page.getByRole('heading', { name: 'Know your model. Beyond the score.', level: 1 })).toBeVisible();
+  await expect(page.getByRole('navigation').locator('[data-view]').first()).toHaveAttribute('data-view', 'overview');
+  await expect(page.getByRole('region', { name: 'Guided synthetic showcase' })).toHaveCount(0);
+  await expect(page.locator('#overview-metrics .metric')).toHaveCount(3);
+  for (const theme of ['light', 'dark', 'system']) {
+    await page.getByRole('combobox', { name: 'Appearance' }).selectOption(theme);
+    for (const selector of ['#overview .notice', '#overview .metric', '#overview .panel', '.theme-control select', '.command-trigger']) {
+      expect(await page.locator(selector).evaluateAll(elements => elements.map(element => getComputedStyle(element).borderRadius))).toEqual(expect.arrayContaining(['0px']));
+      expect(await page.locator(selector).evaluateAll(elements => elements.every(element => getComputedStyle(element).borderRadius === '0px'))).toBe(true);
+    }
+  }
+  await page.getByRole('navigation').getByRole('button', { name: 'Prediction Studio', exact: true }).click();
+  await expect(page.getByText('From intercept to score.', { exact: true })).toBeVisible();
+  expect(await page.locator('.prediction-card, .waterfall-scroll').evaluateAll(elements => elements.every(element => getComputedStyle(element).borderRadius === '0px'))).toBe(true);
+  await page.getByRole('navigation').getByRole('button', { name: 'Guided showcase', exact: true }).click();
+  await expect(page.getByRole('button', { name: /Start guided walkthrough/ })).toBeVisible();
+});
+
 test('Prediction Studio reconstructs scores and restores a browser-local comparison', async ({ page }) => {
   await page.goto('/#studio');
   await expect(page.getByText('From intercept to score.', { exact: true })).toBeVisible();

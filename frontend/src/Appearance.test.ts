@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const read = (name: string) => readFileSync(new URL('../../signalrank/static/' + name, import.meta.url), 'utf8');
 const html = read('index.html'), theme = read('theme.js'), application = read('app.js'), css = read('editorial.css');
 const opened: JSDOM[] = [];
-async function setup({ preference, dark = false, mobile = false, denied = false }: { preference?: string; dark?: boolean; mobile?: boolean; denied?: boolean } = {}) {
-  const dom = new JSDOM(html, { url: 'http://127.0.0.1/#overview', runScripts: 'outside-only' });
+async function setup({ preference, dark = false, mobile = false, denied = false, hash = '' }: { preference?: string; dark?: boolean; mobile?: boolean; denied?: boolean; hash?: string } = {}) {
+  const dom = new JSDOM(html, { url: 'http://127.0.0.1/' + hash, runScripts: 'outside-only' });
   opened.push(dom);
   const window = dom.window;
   function media(matches: boolean) {
@@ -39,6 +39,16 @@ async function setup({ preference, dark = false, mobile = false, denied = false 
 afterEach(() => { opened.splice(0).forEach(dom => dom.window.close()); vi.restoreAllMocks(); });
 
 describe('shipped appearance and navigation', () => {
+  it('lands on Overview with the overview navigation first, retaining explicit walkthrough links', async () => {
+    const root = await setup();
+    expect(root.window.location.hash).toBe('#overview');
+    expect(root.window.document.getElementById('overview')!.hidden).toBe(false);
+    expect(root.window.document.getElementById('showcase')!.hidden).toBe(true);
+    expect(root.window.document.querySelector('#workspace-navigation [data-view]')!.getAttribute('data-view')).toBe('overview');
+    const walkthrough = await setup({ hash: '#showcase' });
+    expect(walkthrough.window.location.hash).toBe('#showcase');
+    expect(walkthrough.window.document.getElementById('showcase')!.hidden).toBe(false);
+  });
   it('preserves Light, Dark and System and follows system changes without reload', async () => {
     const { window, control, scheme } = await setup();
     expect(Array.from(control.options, option => option.value)).toEqual(['system', 'light', 'dark']);
@@ -93,6 +103,15 @@ describe('shipped appearance and navigation', () => {
 });
 
 describe('editorial theme legibility', () => {
+  it('keeps interface corners square while preserving circular status and chart markers', () => {
+    const sheets = ['app.css', 'workspace.css', 'editorial.css'].map(read);
+    for (const name of ['experiments', 'lab', 'reliability', 'replay', 'workbench']) sheets.push(readFileSync(new URL('./' + name + '.css', import.meta.url), 'utf8'));
+    const radii = sheets.flatMap(sheet => Array.from(sheet.matchAll(/border-radius\s*:\s*([^;}]+)/g), match => match[1].trim()));
+    expect(radii.length).toBeGreaterThan(20);
+    expect(radii.every(value => value === '0' || value === '50%')).toBe(true);
+    const dom = new JSDOM(html); opened.push(dom);
+    dom.window.document.querySelectorAll('.workflow-node rect').forEach(rect => expect(rect.getAttribute('rx')).toBe('0'));
+  });
   function luminance(hex: string) {
     const rgb = hex.slice(1).match(/../g)!.map(value => parseInt(value, 16) / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
     return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;

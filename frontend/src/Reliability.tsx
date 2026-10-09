@@ -23,7 +23,7 @@ function ImportanceChart({ items, metric }: { items: Factor[]; metric: 'average_
     <line x1="420" y1="15" x2="420" y2="185" stroke="var(--control)" />
     {items.map((item, i) => {
       const width = Math.abs(item[metric]) / max * 155;
-      return <g key={item.feature}><text x="12" y={40 + i * 42}>{featureNames[item.feature]}</text><rect x={item[metric] >= 0 ? 420 : 420 - width} y={25 + i * 42} width={width} height="22" rx="2" fill={item[metric] >= 0 ? 'var(--accent)' : 'var(--muted)'}><title>{featureNames[item.feature]}: {signed(item[metric])}</title></rect></g>;
+      return <g key={item.feature}><text x="12" y={40 + i * 42}>{featureNames[item.feature]}</text><rect x={item[metric] >= 0 ? 420 : 420 - width} y={25 + i * 42} width={width} height="22" rx="0" fill={item[metric] >= 0 ? 'var(--accent)' : 'var(--muted)'}><title>{featureNames[item.feature]}: {signed(item[metric])}</title></rect></g>;
     })}
     <text x="250" y="211" textAnchor="middle">−{max.toFixed(4)}</text><text x="420" y="211" textAnchor="middle">0</text><text x="590" y="211" textAnchor="middle">+{max.toFixed(4)}</text>
   </svg>;

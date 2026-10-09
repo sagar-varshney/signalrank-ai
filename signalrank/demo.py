@@ -35,7 +35,7 @@ def main():
     print("Markdown report: " + str(directory / "experiment-report.md"), flush=True)
     if not args.no_serve:
         import uvicorn
-        print(f"Model Reliability: http://127.0.0.1:{args.port}/#reliability", flush=True)
+        print(f"Overview: http://127.0.0.1:{args.port}/#overview", flush=True)
         uvicorn.run("signalrank.api:app", host="127.0.0.1", port=args.port)
 
 

@@ -12,13 +12,13 @@ uv sync --locked --extra test --python 3.13
 .venv/bin/python -m signalrank.demo
 ```
 
-Installation downloads dependencies from your configured Python package index. The demo itself uses no external data source, weights, telemetry or hosted AI service. It prints the new run directory and opens a loopback server, not a browser. Visit `http://127.0.0.1:8015/#reliability`. Stop with Ctrl+C. If that port is occupied, use `--port 8016`. The default command performs bounded offline training before startup; readiness begins when Uvicorn reports startup complete.
+Installation downloads dependencies from your configured Python package index. The demo itself uses no external data source, weights, telemetry or hosted AI service. It prints the new run directory and opens a loopback server, not a browser. Visit `http://127.0.0.1:8015/` for Overview. Stop with Ctrl+C. If that port is occupied, use `--port 8016`. The default command performs bounded offline training before startup; readiness begins when Uvicorn reports startup complete.
 
 Node is unnecessary for this demo: compiled React assets are included. To edit the frontend, follow the pnpm instructions in README. The committed Python lock pins dependency resolution and hashes, but does not promise identical numerical results across platforms. `uv sync` manages `.venv`; use `UV_PROJECT_ENVIRONMENT` to choose a separate environment if preserving an existing one. The unpinned pip installation alternative is documented in README.
 
 ## Guided five-step showcase
 
-After startup, open `http://127.0.0.1:8015/#showcase` and choose **Start guided walkthrough**:
+Overview is the first page. For the optional tour, open `http://127.0.0.1:8015/#showcase` and choose **Start guided walkthrough**:
 
 1. **Prediction Studio:** edit fictional inputs, compare probabilities, inspect all linear terms and the separate calibration bridge. Browser-local examples and JSON exports pin the model version.
 2. **Diagnostics:** inspect selected negatives, missed positives and subgroup support. Scores are not causal explanations.

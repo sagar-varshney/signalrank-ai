@@ -40,7 +40,7 @@ docker stats --no-stream signalrank-public-check
 docker stop signalrank-public-check
 ```
 
-The loopback mapping is deliberate. Open `http://127.0.0.1:8030/#showcase` and test Light/Dark/System, Studio, recovery/decision controls and the five-step tour. Local saved examples remain local to that browser origin. Never substitute a downloaded pickle artifact.
+The loopback mapping is deliberate. Open `http://127.0.0.1:8030/` for the Overview landing page, then test Light/Dark/System, Studio, recovery/decision controls and the five-step tour. Local saved examples remain local to that browser origin. Never substitute a downloaded pickle artifact.
 
 CI builds the actual Linux image, starts it with a read-only filesystem, no extra capabilities and the documented free-plan CPU/memory envelope, verifies non-root execution and excluded study/database files, runs bounded concurrent predictions and checks observed container peak memory. This is a bounded smoke test, not a capacity, availability or penetration-testing guarantee. Docker is not required for normal local development.
 

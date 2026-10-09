@@ -2,7 +2,7 @@
 
 A Python rare-event ML research workbench with a FastAPI dashboard and React/TypeScript UI. Its original fictional data supports calibrated text-plus-tabular ranking, chronological development evaluation, complete prediction explanations, delayed-label replay and fixed-schedule recovery comparisons. It does not claim real-world risk accuracy.
 
-Start with `#showcase` for a guided five-step explanation. The cold blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
+Overview is the default landing page. Open `#showcase` when you want the optional five-step walkthrough. The sharp-edged blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
 
 ## Run locally
 
@@ -94,7 +94,7 @@ After installing the project into a Python 3.11+ virtual environment, run:
 .venv/bin/python -m signalrank.demo --no-serve
 ```
 
-The command creates a new run under `artifacts/demo/runs/`, exports `experiment-report.md`, and serves the saved model at `http://127.0.0.1:8015/#reliability` unless `--no-serve` is supplied. Optional `--config`, `--output` and `--port` customize the local demo. Training and serving make no external data requests. Software installation may require network access. The demo deliberately clears inherited extra trusted-model paths and uses history/receipts under its output root. It preserves previous runs and does not automatically open a browser. See [DEMO.md](DEMO.md) for the recruiter walkthrough and [ARCHITECTURE.md](ARCHITECTURE.md) for implementation boundaries.
+The command creates a new run under `artifacts/demo/runs/`, exports `experiment-report.md`, and serves the saved model at `http://127.0.0.1:8015/#overview` unless `--no-serve` is supplied. Optional `--config`, `--output` and `--port` customize the local demo. Training and serving make no external data requests. Software installation may require network access. The demo deliberately clears inherited extra trusted-model paths and uses history/receipts under its output root. It preserves previous runs and does not automatically open a browser. See [DEMO.md](DEMO.md) for the recruiter walkthrough and [ARCHITECTURE.md](ARCHITECTURE.md) for implementation boundaries.
 
 `#reliability` reads saved offline results from `/api/reliability`; it does not fit models on a request. Normal startup without a newly trained artifact shows instructions, not invented results. The workspace includes:
 

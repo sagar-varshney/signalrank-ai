@@ -23,7 +23,9 @@ test('public profile remains interactive under its restrictive CSP without share
 });
 
 test('public walkthrough and evidence exports exclude the local official-data study', async ({ page }) => {
-  await page.goto('/#overview');
+  await page.goto('/');
+  await expect(page).toHaveURL(/#overview$/);
+  await expect(page.getByRole('navigation').locator('[data-view]').first()).toHaveAttribute('data-view', 'overview');
   await expect(page.getByText('Historical pilot validated', { exact: true })).not.toBeVisible();
   await page.getByRole('button', { name: 'Try Prediction Studio', exact: true }).click();
   await expect(page.getByText('From intercept to score.', { exact: true })).toBeVisible();
