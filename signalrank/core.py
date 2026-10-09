@@ -61,14 +61,13 @@ def registry():
     return json.loads(files("signalrank").joinpath("sources.json").read_text())
 
 
-def require_source(name):
-    source = registry().get(name)
-    if not source or source["status"] != "approved":
-        raise ValueError(f"Source {name!r} is not approved for ingestion")
+def require_source(name, operation="local_audit"):
+    from signalrank.scope import require_use
+    require_use(name, operation, registry())
 
 
 def generate(seed=42, count=3600):
-    require_source("synthetic")
+    require_source("synthetic", "train")
     rng = np.random.default_rng(seed)
     rows = []
     descriptions = ["memory corruption in document parser", "authentication bypass in gateway", "information disclosure in local utility", "remote command handling flaw", "denial of service in image decoder"]

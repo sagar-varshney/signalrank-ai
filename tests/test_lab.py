@@ -157,11 +157,26 @@ class InferenceTests(unittest.TestCase):
         with patch.dict("os.environ", self.env), TestClient(app) as client:
             self.assertEqual(client.post("/api/batches", json={**self.body, "model_id": "0" * 64}).status_code, 409)
             self.assertEqual(client.post("/api/batches", content="{bad", headers={"Content-Type": "application/json"}).status_code, 422)
+            self.assertEqual(client.post("/api/batches", content='{"source":"synthetic","source":"real"}', headers={"Content-Type": "application/json"}).status_code, 422)
             self.assertEqual(client.post("/api/batches", json=self.body, headers={"Origin": "https://evil.example"}).status_code, 403)
             self.assertEqual(client.post("/api/batches", content="x" * (256 * 1024 + 1)).status_code, 413)
             self.assertEqual(client.get("/api/batches").json()["total"], 0)
             self.assertEqual(client.get("/api/batches/missing").status_code, 404)
             self.assertEqual(client.get("/api/report", headers={"Host": "evil.example"}).status_code, 400)
+
+    def test_named_dataset_changes_return_conflict_without_prediction_or_receipt(self):
+        body = {**self.body, "schema_version": "fictional-input-v1", "dataset_version": "api-v1"}
+        with patch.dict("os.environ", self.env), TestClient(app) as client:
+            first = client.post("/api/batches", json=body)
+            self.assertEqual(first.status_code, 201)
+            self.assertEqual(first.json()["input_contract"]["dataset_version"], "api-v1")
+            changed = deepcopy(body); changed["records"][0]["severity"] = 9.99
+            with patch.object(app.state.experiment, "predict", side_effect=AssertionError("Conflict must precede prediction")):
+                response = client.post("/api/batches", json=changed)
+            self.assertEqual(response.status_code, 409)
+            self.assertIn("choose a new version", response.json()["detail"])
+            self.assertEqual(client.get("/api/batches").json()["total"], 1)
+            self.assertEqual(client.post("/api/batches", json={**changed, "dataset_version": "api-v2"}).status_code, 201)
 
     def test_missing_trusted_model_disables_inference_but_keeps_diagnostics(self):
         with patch.dict("os.environ", {**self.env, "SIGNALRANK_TRUSTED_MODEL_DIR": ""}), TestClient(app) as client:

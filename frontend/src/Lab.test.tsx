@@ -70,6 +70,24 @@ describe('versioned batch inference',()=>{
     expect((screen.getByRole('button',{name:'Run & save predictions →'}) as HTMLButtonElement).disabled).toBe(true);
     expect(vi.mocked(fetch).mock.calls.some(([,options])=>options?.method==='POST')).toBe(false);
   });
+  it('preserves explicit contract and dataset versions in the submission',async()=>{
+    mount('inference');const run=await screen.findByRole('button',{name:'Run & save predictions →'});
+    await waitFor(()=>expect((run as HTMLButtonElement).disabled).toBe(false));
+    const payload={source:'synthetic',schema_version:'fictional-input-v1',dataset_version:'manual-v1',records};
+    fireEvent.change(screen.getByLabelText('Fictional input JSON'),{target:{value:JSON.stringify(payload)}});
+    fireEvent.click(run);await screen.findByText('Saved batch predictions');
+    const call=vi.mocked(fetch).mock.calls.find(([,options])=>options?.method==='POST');
+    expect(JSON.parse(call![1]!.body as string)).toEqual({...payload,model_id:model.artifact_id});
+  });
+  it('shows a version conflict without retrying or claiming a saved result',async()=>{
+    const original=vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((url,options)=>options?.method==='POST'?Promise.resolve(response({detail:'Dataset version already names different inputs; choose a new version before predicting'},409)):original(url,options));
+    mount('inference');const run=await screen.findByRole('button',{name:'Run & save predictions →'});
+    await waitFor(()=>expect((run as HTMLButtonElement).disabled).toBe(false));fireEvent.click(run);
+    expect((await screen.findByRole('alert')).textContent).toContain('choose a new version');
+    expect(vi.mocked(fetch).mock.calls.filter(([,options])=>options?.method==='POST')).toHaveLength(1);
+    expect(screen.queryByText('Saved batch predictions')).toBeNull();
+  });
   it('preserves an editable draft and rejects malformed JSON before submitting',async()=>{
     mount('inference');const editor=screen.getByLabelText('Fictional input JSON');
     await waitFor(()=>expect((editor as HTMLTextAreaElement).value).toContain('synthetic'));

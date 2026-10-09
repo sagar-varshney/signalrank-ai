@@ -11709,6 +11709,19 @@ function Lt({ value: e }) {
 				" fictional records · ",
 				new Date(e.created_at).toLocaleString()
 			] }),
+			e.input_contract && /* @__PURE__ */ (0, b.jsxs)("p", {
+				className: "notice subtle",
+				children: [
+					"Input contract: ",
+					e.input_contract.schema_version,
+					" · Dataset version: ",
+					e.input_contract.dataset_version || "not supplied",
+					" · ",
+					e.input_contract.versioning,
+					". ",
+					e.input_contract.warnings.join(" ")
+				]
+			}),
 			/* @__PURE__ */ (0, b.jsxs)("div", {
 				className: "batch-lineage",
 				children: [
@@ -11845,7 +11858,8 @@ function Lt({ value: e }) {
 					}),
 					/* @__PURE__ */ (0, b.jsx)("pre", { children: JSON.stringify({
 						runtime: e.model.runtime,
-						code_sha256: e.model.code_sha256
+						code_sha256: e.model.code_sha256,
+						input_contract: e.input_contract
 					}, null, 2) })
 				]
 			}),
@@ -11891,7 +11905,12 @@ function Rt() {
 		try {
 			let e = JSON.parse(o);
 			if (!e || !Array.isArray(e.records) || !e.records.length || e.records.length > 500) throw Error("Provide between 1 and 500 fictional records.");
-			if (Object.keys(e).some((e) => !["source", "records"].includes(e))) throw Error("The input envelope accepts only source and records; model selection is separate.");
+			if (Object.keys(e).some((e) => ![
+				"source",
+				"records",
+				"schema_version",
+				"dataset_version"
+			].includes(e))) throw Error("The input envelope accepts source, records, schema_version and dataset_version; model selection is separate.");
 			_.mutate({
 				...e,
 				model_id: g
@@ -11975,7 +11994,7 @@ function Rt() {
 					/* @__PURE__ */ (0, b.jsx)("p", {
 						id: "batch-schema",
 						className: "caption",
-						children: "1–500 records · SYN-BATCH identifiers · severity 1–10 · strict booleans · five original fictional description categories. Extra fields, outcome labels, external descriptions and duplicate IDs are rejected. Maximum request size: 256 KiB."
+						children: "1–500 records · SYN-BATCH identifiers · severity 1–10 · strict booleans · five original fictional description categories. Extra fields, outcome labels, external descriptions and duplicate IDs are rejected. Maximum request size: 256 KiB. Optional dataset_version names immutable inputs; choose a new version after editing. Unversioned legacy inputs remain accepted without that guarantee."
 					}),
 					c && /* @__PURE__ */ (0, b.jsx)("div", {
 						role: "alert",

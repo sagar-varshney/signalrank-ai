@@ -1,0 +1,9 @@
+{
+  "source": "synthetic",
+  "schema_version": "fictional-input-v1",
+  "dataset_version": "example-v1",
+  "records": [
+    {"id": "SYN-BATCH-example-1", "description": "authentication bypass in gateway", "severity": 5.0, "remote": true, "authentication_required": false},
+    {"id": "SYN-BATCH-example-2", "description": "information disclosure in local utility", "severity": 3.0, "remote": false, "authentication_required": true}
+  ]
+}

@@ -6,39 +6,20 @@ import json
 import os
 from pathlib import Path
 import sqlite3
-from typing import Literal
 from uuid import uuid4
 from importlib.resources import files
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-
-DESCRIPTIONS = (
-    "memory corruption in document parser", "authentication bypass in gateway",
-    "information disclosure in local utility", "remote command handling flaw", "denial of service in image decoder",
-)
+from pydantic import Field
+from signalrank.contracts import DESCRIPTIONS, FictionalRecord, DatasetEnvelope, summary, decode_json
 
 
-class FictionalRecord(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-    id: str = Field(pattern=r"^SYN-BATCH-[A-Za-z0-9_-]{1,40}$")
-    description: Literal[DESCRIPTIONS]
-    severity: float = Field(ge=1, le=10, allow_inf_nan=False)
-    remote: bool
-    authentication_required: bool
-
-
-class BatchRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-    source: Literal["synthetic"]
+class BatchRequest(DatasetEnvelope):
     model_id: str = Field(pattern=r"^[a-f0-9]{64}$")
-    records: list[FictionalRecord] = Field(min_length=1, max_length=500)
 
-    @model_validator(mode="after")
-    def unique_ids(self):
-        if len({r.id for r in self.records}) != len(self.records):
-            raise ValueError("Batch identifiers must be unique")
-        return self
+
+class DatasetVersionConflict(ValueError):
+    pass
 
 
 def sample(seed=2026, count=20):
@@ -58,6 +39,7 @@ class BatchStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS batches (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL, sha256 TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS dataset_versions (version TEXT PRIMARY KEY, input_sha256 TEXT NOT NULL)")
 
     @contextmanager
     def connect(self):
@@ -69,6 +51,18 @@ class BatchStore:
             db.close()
 
     def save(self, request, experiment, model_evidence):
+        # Revalidate even constructed Python models before executing any prediction.
+        request = BatchRequest.model_validate(request.model_dump())
+        contract = summary(request)
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if request.dataset_version:
+                previous = db.execute("SELECT input_sha256 FROM dataset_versions WHERE version=?", (request.dataset_version,)).fetchone()
+                if previous and previous[0] != contract["input_sha256"]:
+                    raise DatasetVersionConflict("Dataset version already names different inputs; choose a new version before predicting")
+            return self._save_validated(db, request, experiment, model_evidence, contract)
+
+    def _save_validated(self, db, request, experiment, model_evidence, contract):
         records = [row.model_dump() for row in request.records]
         p = experiment.predict(records)
         if not np.isfinite(p).all() or ((p < 0) | (p > 1)).any():
@@ -79,11 +73,14 @@ class BatchStore:
                    "input_sha256": fingerprint({"source": request.source, "records": records}),
                    "input_order": [r["id"] for r in records], "model": model_evidence,
                    "count": len(records), "target": experiment.report["target"],
+                   "input_contract": contract,
+                   "contract_code_sha256": sha256(files("signalrank").joinpath("contracts.py").read_bytes()).hexdigest(),
                    "items": [{**records[i], "rank": rank, "probability": float(p[i])} for rank, i in enumerate(order, 1)],
                    "warning": "Fictional inference only. No observed outcomes or performance metrics; rankings are not operational advice. Inputs use the training generator's category vocabulary. No model is fitted by this request."}
         digest = fingerprint(receipt)
-        with self.connect() as db:
-            db.execute("INSERT INTO batches VALUES (?, ?, ?, ?)", (receipt["id"], receipt["created_at"], json.dumps(receipt, allow_nan=False), digest))
+        db.execute("INSERT INTO batches VALUES (?, ?, ?, ?)", (receipt["id"], receipt["created_at"], json.dumps(receipt, allow_nan=False), digest))
+        if request.dataset_version:
+            db.execute("INSERT OR IGNORE INTO dataset_versions VALUES (?, ?)", (request.dataset_version, contract["input_sha256"]))
         return {**receipt, "receipt_sha256": digest}
 
     def get(self, identifier):
@@ -126,6 +123,11 @@ class BatchBodyLimit:
             if not message.get("more_body", False):
                 break
         body = b"".join(chunks)
+        try:
+            decode_json(body)
+        except (ValueError, UnicodeError, RecursionError):
+            from starlette.responses import JSONResponse
+            return await JSONResponse({"detail": "Batch JSON must have unique fields, finite values and valid bounded structure"}, status_code=422)(scope, receive, send)
         supplied = False
         async def bounded_receive():
             nonlocal supplied

@@ -26,6 +26,8 @@ The public profile is an unauthenticated, intentionally synthetic portfolio demo
 
 Local mode retains full SQLite snapshots and versioned batch receipts on loopback. Do not expose that local profile publicly. Real-data training/display/redistribution gates are unchanged; this image is no authorization to deploy official-data studies.
 
+Read-only `/api/scope` exposes only the synthetic operation register plus outstanding review requirements; `/api/contracts` exposes original fictional fixture checks and schema. Neither endpoint accepts approvals, uploads or training requests. The public profile still forbids all batch writes and stores no dataset versions. Local named-version identity lives only in the local batch database, not the public service.
+
 ## Verify before creating a service
 
 From the repository root, using Docker if installed:

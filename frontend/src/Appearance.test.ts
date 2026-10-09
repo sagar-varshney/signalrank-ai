@@ -25,6 +25,8 @@ async function setup({ preference, dark = false, mobile = false, denied = false,
     '/api/dataset': { selected: 0, processed: 0, pending: 0, states: {}, candidate_labels: {}, blockers: [] },
     '/api/dataset/records': { total: 0, items: [] }, '/api/experiments': { current_id: 'a'.repeat(64), items: [] },
     '/api/health': { status: 'ok' }, '/api/temporal': { folds: [], warning: 'No offline run.' },
+    '/api/scope': { profile: 'local', permission_note: 'Use-specific scope, not legal clearance.', source_permissions: [{source:'cve',operations:{local_audit:'allowed',train:'blocked',display:'blocked',redistribute:'blocked',release_model:'blocked'}}], scientific_gates:['Historical availability pending.'], release_gates:[{requirement:'Release notices require review.'}] },
+    '/api/contracts': { checks: [{name:'Missing severity',status:'invalid',issues:[{message:'Field required'}]}], version_conflict:{reason:'Dataset version reused with different inputs'}, version_change:{changed:[{id:'SYN-BATCH-1',fields:['severity']}] } },
     '/api/simulate': { strategies: [], total_positives: 0, random_expected_captured: 0 }, '/api/forecasts': { items: [] },
   };
   const fetch = vi.fn(async (path: string) => ({ ok: true, json: async () => fixtures[path.split('?')[0]] }));
@@ -55,6 +57,16 @@ describe('shipped appearance and navigation', () => {
     expect(control.value).toBe('system'); expect(window.document.documentElement.dataset.theme).toBe('light');
     scheme.change(true); expect(window.document.documentElement.dataset.theme).toBe('dark');
     scheme.change(false); expect(window.document.documentElement.dataset.theme).toBe('light');
+  });
+  it('renders use-specific scope gates and contract fixture checks without writing approvals', async () => {
+    const { window, fetch } = await setup({ hash: '#data' });
+    await vi.waitFor(() => expect(window.document.getElementById('scope-permissions')!.textContent).toContain('cve'));
+    expect(window.document.getElementById('scope-permissions')!.textContent!.match(/Blocked/g)).toHaveLength(4);
+    expect(window.document.getElementById('scope-release')!.textContent).toContain('notices require review');
+    (window.document.querySelector('nav [data-view="inference"]') as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(window.document.getElementById('contract-checks')!.textContent).toContain('Missing severity'));
+    expect(window.document.getElementById('contract-version')!.textContent).toContain('reused with different inputs');
+    expect(fetch.mock.calls.every(call => call.length === 1)).toBe(true);
   });
   it('honors explicit choices, persists them and restores them on another page load', async () => {
     const first = await setup({ preference: 'light', dark: true });

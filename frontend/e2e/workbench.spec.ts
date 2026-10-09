@@ -1,5 +1,32 @@
 import { test, expect } from '@playwright/test';
 
+test('source-use gates remain distinct and changed dataset versions block local predictions', async ({ page }) => {
+  await page.goto('/#data');
+  await expect(page.getByRole('heading', { name: 'Audit is not training approval.' })).toBeVisible();
+  const sourceRow = page.locator('#scope-permissions tr').filter({ hasText: 'cve' });
+  await expect(sourceRow.getByText('Allowed scope', { exact: true })).toHaveCount(1);
+  await expect(sourceRow.getByText('Blocked', { exact: true })).toHaveCount(4);
+  await expect(page.getByText('No permissions are granted by this screen.', { exact: false })).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: 'Batch inference', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Catch changes before prediction.' })).toBeVisible();
+  await expect(page.locator('.contract-check')).toHaveCount(7);
+  await expect(page.locator('#contract-version')).toContainText('Dataset version reused');
+  const editor = page.getByLabel('Fictional input JSON');
+  await expect(page.getByRole('button', { name: 'Run & save predictions →' })).toBeEnabled();
+  const payload = JSON.parse(await editor.inputValue());
+  payload.dataset_version = 'browser-contract-v1';
+  await editor.fill(JSON.stringify(payload));
+  await page.getByRole('button', { name: 'Run & save predictions →' }).click();
+  await expect(page.getByRole('heading', { name: 'Saved batch predictions' })).toBeVisible();
+  await expect(page.locator('.batch-result .notice')).toContainText('browser-contract-v1');
+  payload.records[0].severity = 9.99;
+  await editor.fill(JSON.stringify(payload));
+  await page.getByRole('button', { name: 'Run & save predictions →' }).click();
+  await expect(page.getByRole('alert')).toContainText('choose a new version');
+  const receipts = await page.request.get('/api/batches');
+  expect((await receipts.json()).total).toBe(1);
+});
+
 test('Overview is the landing page and sharp corners persist across themes and workspaces', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/#overview$/);

@@ -4,6 +4,19 @@ A Python rare-event ML research workbench with a FastAPI dashboard and React/Typ
 
 Overview is the default landing page. Open `#showcase` when you want the optional five-step walkthrough. The sharp-edged blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
 
+### Scope before expansion
+
+[SCOPE-REVIEW.md](SCOPE-REVIEW.md) separates source-use permissions, scientific feasibility and release review. Local audit approval never implies real-data training or public dataset/model release. Real-data training remains disabled; the saved exploratory cohort has zero positive candidate outcomes. No new acquisition, paid service or operational accuracy claim is introduced.
+
+The versioned `fictional-input-v1` contract rejects missing/unknown fields, invalid values, duplicate IDs/JSON keys and unsupported schemas before local batch prediction. Optional named dataset versions become immutable on successful save; changed inputs under the same version return 409 before prediction. Old unversioned inputs/receipts remain supported with no version-identity guarantee. Repeated features under distinct IDs are reported, not silently removed. Read-only `/api/contracts` shows fixture checks and a JSON Schema; `/api/scope` shows use-specific gates (synthetic-only in the public profile).
+
+```sh
+.venv/bin/python -m signalrank.scope
+.venv/bin/python -m signalrank.contracts examples/fictional-v2.json --previous examples/fictional-v1.json
+```
+
+These commands inspect local evidence without downloading data or fitting models. The comparison lists added/removed/changed records; compatibility is not a performance claim. Scheduler and credible real-data error analysis remain later steps, contingent on permission and scientific feasibility.
+
 ## Run locally
 
 For the pinned development/test environment, install uv 0.12.23 from PyPI, then:

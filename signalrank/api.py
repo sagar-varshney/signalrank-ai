@@ -10,7 +10,9 @@ from fastapi.staticfiles import StaticFiles
 
 from signalrank.core import Experiment, registry
 from signalrank.history import ExperimentStore, snapshot
-from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sample
+from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sample, DatasetVersionConflict
+from signalrank.contracts import fixture_report
+from signalrank.scope import review as scope_review
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
@@ -228,7 +230,7 @@ def inference_models():
 
 @app.get("/api/inference/sample")
 def inference_sample(seed: int = Query(default=2026, ge=0, le=2**32 - 1), count: int = Query(default=20, ge=1, le=500)):
-    return {"source": "synthetic", "records": sample(seed, count)}
+    return {"source": "synthetic", "schema_version": "fictional-input-v1", "dataset_version": f"sample-{seed}-{count}", "records": sample(seed, count)}
 
 
 @app.post("/api/batches", status_code=201)
@@ -242,7 +244,10 @@ def run_batch(body: BatchRequest, request: Request):
     if entry is None:
         raise HTTPException(409, "Select an artifact explicitly trusted at server startup; batch not saved")
     experiment, evidence = entry
-    return app.state.batches.save(body, experiment, evidence)
+    try:
+        return app.state.batches.save(body, experiment, evidence)
+    except DatasetVersionConflict as error:
+        raise HTTPException(409, str(error)) from error
 
 
 @app.get("/api/batches")
@@ -278,6 +283,16 @@ def sources():
     if app.state.settings.public:
         return {"synthetic": registry()["synthetic"]}
     return registry()
+
+
+@app.get("/api/scope")
+def scope_report():
+    return scope_review(public=app.state.settings.public)
+
+
+@app.get("/api/contracts")
+def contract_report():
+    return fixture_report()
 
 
 @app.get("/api/feasibility")

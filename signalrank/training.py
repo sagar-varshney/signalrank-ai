@@ -29,7 +29,7 @@ from signalrank.challenge import build as challenge
 from signalrank.decision import build as decision
 from signalrank.recovery import build as recovery
 
-CODE_FILES = {"core.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py", "replay.py", "challenge.py", "studio.py", "decision.py", "recovery.py"}
+CODE_FILES = {"core.py", "scope.py", "temporal.py", "training.py", "diagnostics.py", "benchmark.py", "uncertainty.py", "reliability.py", "reporting.py", "replay.py", "challenge.py", "studio.py", "decision.py", "recovery.py"}
 
 
 def runtime():

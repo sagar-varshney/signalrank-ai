@@ -1,6 +1,7 @@
 {
   "synthetic": {
     "status": "approved",
-    "scope": "Original fictional generator only; no external dataset, real-world validation or security advice"
+    "scope": "Original fictional generator only; no external dataset, real-world validation or security advice",
+    "permissions": {"local_audit": "allowed", "train": "allowed", "display": "allowed", "redistribute": "allowed", "release_model": "allowed"}
   }
 }

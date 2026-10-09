@@ -2,6 +2,12 @@
 
 Review date: 2026-10-04. This engineering review is not a legal opinion or assurance of zero risk.
 
+## Use-specific scope and fictional input contracts
+
+[SCOPE-REVIEW.md](SCOPE-REVIEW.md) records the focused boundary review and unresolved release requirements. Source decisions now name each operation independently: local audit, training, public record display, data redistribution and model release. Generic `status: approved` without an explicit allowed operation is insufficient. Unknown/missing/malformed permissions fail closed. Real-data training/model release remain hard-disabled even if a register flag is edited; the source register is an engineering safeguard, not a legal authority.
+
+`/api/scope` and `python -m signalrank.scope` distinguish scientific gates from permission decisions and never certify legality. Public responses include no official-data audit rows/counts. Input contract checks use only original fictional fixtures and existing Pydantic; no new dependency, source, model or hosting service. Strict schema checks precede batch inference; a transaction protects named dataset identity before prediction and commits versions only with successful receipts. Unversioned legacy inputs are explicit. These checks do not validate a real-data training schema or enable public visitor storage. Code ownership/license selection, exact software/asset notices, deployed source terms and hosting/public-exposure review remain outstanding.
+
 ## Replay, challenge and verification extension (2026-10-08)
 
 The replay and challenge generators are original fictional simulations, not new external sources. Concept-shift cases deliberately define new synthetic outcomes and are separate from the earlier label-preserving reliability probes. No real-data training/display/redistribution permission, pretrained weights, hosted service, telemetry or public deployment is introduced. Checkpoint exports hide future records and immature outcomes; full-run retrospective summaries are explicitly labeled. These are engineering safeguards, not legal or accuracy certification.

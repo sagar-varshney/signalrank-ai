@@ -6,6 +6,8 @@ Study one-time early-warning ranking for ML researchers evaluating temporal gene
 
 ## Real-data study: blocked pending feasibility
 
+The use-specific scope review is documented in [SCOPE-REVIEW.md](SCOPE-REVIEW.md). Permission decisions and scientific adequacy are independent gates; editing the source register cannot activate real-data fitting. The fictional inference contract is not a real-data schema or outcome-validation protocol. No new cohort is acquired by this implementation. The optional bounded scheduler remains deferred until credible evidence exists; its tuning results must never select configurations on the final evaluation interval.
+
 The existing 500-record selection remains immutable and exploratory: 428 candidates, 72 exclusions, zero positive candidate labels. It cannot establish model performance. Training, display and redistribution permissions remain separate gates. No new source or permission is approved by this document.
 
 Before acquiring a larger study cohort, freeze a manifest defining the publication-date interval, pinned identifier frame, source revisions, random seed or full enumeration, information cutoff, historical catalog observation end, exclusions and compute/download budget. This draft does not invent those choices or silently expand downloads. Identifier year is not publication year. Include rejected records in the accounting; do not replace excluded records or sample according to known outcomes.
