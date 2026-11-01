@@ -100,15 +100,15 @@ describe('shipped appearance and navigation', () => {
     expect(nav.hidden).toBe(true);
     narrow.change(false); expect(nav.hidden).toBe(false);
     const routes = Array.from(nav.querySelectorAll<HTMLButtonElement>('[data-view]'), button => button.dataset.view);
-    expect(new Set(routes).size).toBe(15);
+    expect(new Set(routes).size).toBe(16);
     routes.forEach(route => expect(window.document.getElementById(route!)).not.toBeNull());
   });
   it('opens the intended tools from the overview without triggering inference or training', async () => {
     const { window, fetch } = await setup({ mobile: true });
-    (window.document.querySelector('.hero-actions [data-view="experiments"]') as HTMLButtonElement).click();
-    expect(window.location.hash).toBe('#experiments');
-    (window.document.querySelector('.hero-actions [data-view="inference"]') as HTMLButtonElement).click();
-    expect(window.location.hash).toBe('#inference');
+    (window.document.querySelector('.hero-actions [data-view="evidence"]') as HTMLButtonElement).click();
+    expect(window.location.hash).toBe('#evidence');
+    (window.document.querySelector('.hero-actions [data-view="studio"]') as HTMLButtonElement).click();
+    expect(window.location.hash).toBe('#studio');
     expect(fetch.mock.calls.every(([path]) => !path.startsWith('/api/batches'))).toBe(true);
     expect(window.document.querySelector('.workflow-map desc')!.textContent).toContain('not live execution activity');
   });
@@ -117,7 +117,7 @@ describe('shipped appearance and navigation', () => {
 describe('editorial theme legibility', () => {
   it('keeps interface corners square while preserving circular status and chart markers', () => {
     const sheets = ['app.css', 'workspace.css', 'editorial.css'].map(read);
-    for (const name of ['experiments', 'lab', 'reliability', 'replay', 'workbench']) sheets.push(readFileSync(new URL('./' + name + '.css', import.meta.url), 'utf8'));
+    for (const name of ['experiments', 'lab', 'reliability', 'replay', 'workbench', 'evidence']) sheets.push(readFileSync(new URL('./' + name + '.css', import.meta.url), 'utf8'));
     const radii = sheets.flatMap(sheet => Array.from(sheet.matchAll(/border-radius\s*:\s*([^;}]+)/g), match => match[1].trim()));
     expect(radii.length).toBeGreaterThan(20);
     expect(radii.every(value => value === '0' || value === '50%')).toBe(true);

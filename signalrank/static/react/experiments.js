@@ -15398,8 +15398,343 @@ function Mn() {
 	});
 }
 //#endregion
+//#region src/Evidence.tsx
+var Nn = (e) => e == null ? "Unavailable" : e.toFixed(3), Pn = (e) => (100 * e).toFixed(1) + "%", Fn = (e = 0) => (e / 1024 / 1024).toFixed(1) + " MiB";
+function In() {
+	let e = () => location.hash.slice(1).split(/[/?]/)[0] === "evidence", [t, n] = (0, y.useState)(e);
+	(0, y.useEffect)(() => {
+		let t = () => n(e());
+		return window.addEventListener("hashchange", t), window.addEventListener("signalrank:view", t), () => {
+			window.removeEventListener("hashchange", t), window.removeEventListener("signalrank:view", t);
+		};
+	}, []);
+	let r = O({
+		queryKey: ["evidence"],
+		queryFn: ({ signal: e }) => k("/api/evidence", e),
+		enabled: t
+	}), i = O({
+		queryKey: ["storage"],
+		queryFn: ({ signal: e }) => k("/api/storage", e),
+		enabled: t && !!r.data
+	});
+	if (!t) return null;
+	if (r.error) return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "error",
+		role: "alert",
+		children: [/* @__PURE__ */ (0, b.jsx)("p", { children: r.error.message }), /* @__PURE__ */ (0, b.jsx)("button", {
+			className: "button",
+			onClick: () => void r.refetch(),
+			children: "Try again"
+		})]
+	});
+	if (!r.data) return /* @__PURE__ */ (0, b.jsx)("p", {
+		role: "status",
+		children: "Loading saved experiment evidence…"
+	});
+	let a = r.data, o = a.support;
+	return /* @__PURE__ */ (0, b.jsxs)("div", {
+		className: "lab-workspace evidence-workspace",
+		children: [
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "notice subtle",
+				children: a.warning
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel evidence-summary",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "RESULT / BASELINE / LIMITS"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "What does this experiment establish?" })] }), /* @__PURE__ */ (0, b.jsxs)("div", {
+							className: "evidence-actions",
+							children: [/* @__PURE__ */ (0, b.jsx)("a", {
+								className: "button",
+								href: "/api/export/evidence",
+								download: "signalrank-evidence.md",
+								children: "Export concise report"
+							}), /* @__PURE__ */ (0, b.jsx)("a", {
+								href: "/api/evidence",
+								download: "signalrank-evidence.json",
+								children: "Evidence JSON ↗"
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", { children: "SignalRank ranks fictional records for review. This summary brings the existing evaluation together; opening it does not train or select a model." }),
+					/* @__PURE__ */ (0, b.jsx)("div", {
+						className: "metrics",
+						children: [
+							[
+								"Evaluation records",
+								o.count ?? "Unavailable",
+								`${o.positives ?? "Unavailable"} positive outcomes`
+							],
+							[
+								"Model average precision",
+								Nn(a.comparisons[0].average_precision),
+								`Severity baseline ${Nn(a.comparisons[1].average_precision)}`
+							],
+							[
+								"Positives captured",
+								o.captured ?? "Unavailable",
+								`Global review budget ${o.budget ?? "unavailable"}`
+							]
+						].map(([e, t, n]) => /* @__PURE__ */ (0, b.jsxs)("div", {
+							className: "metric",
+							children: [
+								/* @__PURE__ */ (0, b.jsx)("span", {
+									className: "metric-label",
+									children: e
+								}),
+								/* @__PURE__ */ (0, b.jsx)("strong", {
+									className: "metric-value",
+									children: t
+								}),
+								/* @__PURE__ */ (0, b.jsx)("span", {
+									className: "metric-note",
+									children: n
+								})
+							]
+						}, e))
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "evidence-result",
+						children: [
+							"AP difference versus severity: ",
+							/* @__PURE__ */ (0, b.jsxs)("strong", { children: [a.average_precision_delta_vs_severity >= 0 ? "+" : "", Nn(a.average_precision_delta_vs_severity)] }),
+							". Descriptive difference on this cohort; no significance claim."
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Prevalence ",
+							Pn(o.prevalence),
+							" · ",
+							o.missed ?? "Unavailable",
+							" missed positives · ",
+							o.selected_negatives ?? "Unavailable",
+							" selected negatives. The budget applies once across the entire evaluation cohort."
+						]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsx)("h2", { children: "Compare on the same observations." }), /* @__PURE__ */ (0, b.jsx)("a", {
+							href: "#models",
+							children: "Full model evaluation →"
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsx)(A, {
+						label: "Evidence model comparisons",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Candidate" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Average precision ↑" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Brier ↓" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Recall at 50 ↑" })
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: a.comparisons.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.name }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: Nn(e.average_precision) }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: Nn(e.brier_score) }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: Pn(e.recall_at_50) })
+						] }, e.name)) })] })
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: "Severity is a ranking score, so it has no Brier score. Other candidates use different inputs or calibration; this is not a controlled architecture comparison."
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "evidence-grid",
+				children: [/* @__PURE__ */ (0, b.jsxs)("article", {
+					className: "panel",
+					children: [
+						/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "TIME / SUPPORT"
+						}),
+						/* @__PURE__ */ (0, b.jsx)("h2", { children: "Where the evidence comes from." }),
+						/* @__PURE__ */ (0, b.jsx)("dl", {
+							className: "evidence-splits",
+							children: [
+								"train",
+								"calibration",
+								"test"
+							].filter((e) => a.splits[e]).map((e) => {
+								let t = a.splits[e];
+								return /* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsxs)("dt", { children: [
+									e,
+									" · ",
+									t.count,
+									" records"
+								] }), /* @__PURE__ */ (0, b.jsxs)("dd", { children: [
+									t.first,
+									" → ",
+									t.last
+								] })] }, e);
+							})
+						}),
+						/* @__PURE__ */ (0, b.jsxs)("p", { children: [
+							a.evaluated_temporal_windows,
+							" of ",
+							a.temporal_windows,
+							" saved temporal windows evaluable."
+						] }),
+						/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "caption",
+							children: "Thirty-day label-maturity gaps separate the chronological partitions. These are explored synthetic development windows."
+						})
+					]
+				}), /* @__PURE__ */ (0, b.jsxs)("article", {
+					className: "panel",
+					children: [
+						/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "ERRORS / SUPPORT"
+						}),
+						/* @__PURE__ */ (0, b.jsx)("h2", { children: "Inspect the weaker slices." }),
+						a.lowest_ap_slices.length ? /* @__PURE__ */ (0, b.jsx)("ul", {
+							className: "evidence-slices",
+							children: a.lowest_ap_slices.map((e) => /* @__PURE__ */ (0, b.jsxs)("li", { children: [
+								/* @__PURE__ */ (0, b.jsx)("strong", { children: e.group }),
+								/* @__PURE__ */ (0, b.jsxs)("span", { children: [
+									e.dimension,
+									" · AP ",
+									Nn(e.metrics.average_precision)
+								] }),
+								/* @__PURE__ */ (0, b.jsxs)("span", { children: [
+									e.count,
+									" records · ",
+									e.positives,
+									" positives"
+								] })
+							] }, e.dimension + e.group))
+						}) : /* @__PURE__ */ (0, b.jsx)("p", { children: "No supported slice metrics saved." }),
+						/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "caption",
+							children: "Up to three lowest-AP slices that pass the existing display gate. Groups overlap; the gate does not establish statistical adequacy."
+						}),
+						/* @__PURE__ */ (0, b.jsx)("a", {
+							href: "#diagnostics",
+							children: "Inspect all slices and errors →"
+						})
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("h2", { children: "What we can explain—and what remains unproven." }),
+					/* @__PURE__ */ (0, b.jsx)("ul", { children: a.limitations.map((e) => /* @__PURE__ */ (0, b.jsx)("li", { children: e }, e)) }),
+					/* @__PURE__ */ (0, b.jsxs)("details", { children: [
+						/* @__PURE__ */ (0, b.jsx)("summary", { children: "Dataset and snapshot identifiers" }),
+						/* @__PURE__ */ (0, b.jsxs)("p", {
+							className: "replay-fingerprint",
+							children: ["Dataset ", a.dataset_sha256]
+						}),
+						/* @__PURE__ */ (0, b.jsxs)("p", {
+							className: "replay-fingerprint",
+							children: ["Snapshot ", a.provenance.snapshot_id ?? "Unavailable"]
+						}),
+						/* @__PURE__ */ (0, b.jsxs)("p", {
+							className: "replay-fingerprint",
+							children: ["Model artifact ", a.provenance.artifact_id ?? "Unavailable — startup baseline has no saved artifact"]
+						}),
+						/* @__PURE__ */ (0, b.jsxs)("p", {
+							className: "replay-fingerprint",
+							children: ["Training run ", a.provenance.run_id ?? "Unavailable"]
+						})
+					] })
+				]
+			}),
+			i.data?.status === "available" && /* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel",
+				children: [
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "panel-head",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "overline",
+							children: "LOCAL / STORAGE"
+						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Keep the workbench small." })] }), /* @__PURE__ */ (0, b.jsx)("button", {
+							className: "button",
+							onClick: () => void i.refetch(),
+							children: "Refresh storage"
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "metrics",
+						children: [/* @__PURE__ */ (0, b.jsxs)("div", {
+							className: "metric",
+							children: [/* @__PURE__ */ (0, b.jsx)("span", {
+								className: "metric-label",
+								children: "Current artifact root"
+							}), /* @__PURE__ */ (0, b.jsx)("strong", {
+								className: "metric-value",
+								children: Fn(i.data.bytes)
+							})]
+						}), /* @__PURE__ */ (0, b.jsxs)("div", {
+							className: "metric",
+							children: [
+								/* @__PURE__ */ (0, b.jsx)("span", {
+									className: "metric-label",
+									children: "Retention preview"
+								}),
+								/* @__PURE__ */ (0, b.jsx)("strong", {
+									className: "metric-value",
+									children: Fn(i.data.reclaimable_bytes)
+								}),
+								/* @__PURE__ */ (0, b.jsx)("span", {
+									className: "metric-note",
+									children: "Potential removal, keeping three newest runs and selected/trusted runs"
+								})
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption replay-fingerprint",
+						children: i.data.root
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", { children: i.data.measurement }),
+					/* @__PURE__ */ (0, b.jsxs)("details", { children: [/* @__PURE__ */ (0, b.jsx)("summary", { children: "Runs and retention decisions" }), /* @__PURE__ */ (0, b.jsx)(A, {
+						label: "Storage retention preview",
+						children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Run" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Size" }),
+							/* @__PURE__ */ (0, b.jsx)("th", { children: "Retention decision" })
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: i.data.runs?.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, b.jsx)("td", { children: /* @__PURE__ */ (0, b.jsx)("code", { children: e.run_id.slice(0, 12) }) }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: Fn(e.bytes) }),
+							/* @__PURE__ */ (0, b.jsx)("td", { children: e.eligible ? "Eligible for reviewed cleanup" : e.reason })
+						] }, e.run_id)) })] })
+					})] }),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: i.data.warning
+					}),
+					/* @__PURE__ */ (0, b.jsx)("p", { children: "No deletion control is exposed in the browser. Use the documented local storage CLI to create and review an exact cleanup plan." })
+				]
+			}),
+			i.error && /* @__PURE__ */ (0, b.jsxs)("p", {
+				className: "error",
+				role: "alert",
+				children: ["Storage inventory unavailable. ", /* @__PURE__ */ (0, b.jsx)("button", {
+					className: "button",
+					onClick: () => void i.refetch(),
+					children: "Retry storage"
+				})]
+			})
+		]
+	});
+}
+//#endregion
 //#region src/main.tsx
-var Nn = class extends y.Component {
+var Ln = class extends y.Component {
 	state = { failed: !1 };
 	static getDerivedStateFromError() {
 		return { failed: !0 };
@@ -15415,15 +15750,16 @@ var Nn = class extends y.Component {
 			})]
 		}) : this.props.children;
 	}
-}, Pn = new it({ defaultOptions: { queries: {
+}, Rn = new it({ defaultOptions: { queries: {
 	retry: !1,
 	refetchOnWindowFocus: !1
-} } }), Fn = document.getElementById("experiments-root");
-Fn && (0, yt.createRoot)(Fn).render(/* @__PURE__ */ (0, b.jsx)(Nn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-	client: Pn,
+} } }), zn = document.getElementById("experiments-root");
+zn && (0, yt.createRoot)(zn).render(/* @__PURE__ */ (0, b.jsx)(Ln, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+	client: Rn,
 	children: /* @__PURE__ */ (0, b.jsx)(Gt, {})
 }) }));
 for (let [e, t] of [
+	["evidence-root", In],
 	["diagnostics-root", Ft],
 	["inference-root", Rt],
 	["reliability-root", $t],
@@ -15436,8 +15772,8 @@ for (let [e, t] of [
 	["guide-root", jn]
 ]) {
 	let n = document.getElementById(e);
-	n && (0, yt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(Nn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-		client: Pn,
+	n && (0, yt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(Ln, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+		client: Rn,
 		children: /* @__PURE__ */ (0, b.jsx)(t, {})
 	}) }));
 }

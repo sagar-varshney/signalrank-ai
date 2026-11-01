@@ -1,4 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function navigate(page: Page, name: string) {
+  const button = page.getByRole('navigation').getByRole('button', { name, exact: true, includeHidden: true });
+  if (!await button.isVisible()) await page.getByText('Research tools', { exact: true }).click();
+  await button.click();
+}
+
 
 test('public profile remains interactive under its restrictive CSP without shared receipts', async ({ page }) => {
   const failures: string[] = [];
@@ -11,7 +18,7 @@ test('public profile remains interactive under its restrictive CSP without share
   await expect(page.getByText(/Calibrated change:/)).not.toContainText('+0.000');
   await page.getByRole('combobox', { name: 'Appearance' }).selectOption('dark');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.getByRole('navigation').getByRole('button', { name: 'Batch inference', exact: true }).click();
+  await navigate(page, 'Batch inference');
   await expect(page.getByText(/public demo disables shared visitor batch receipts/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Run & save predictions →' })).toBeDisabled();
   const response = await page.request.post('/api/batches', { data: {} });
@@ -43,4 +50,18 @@ test('public walkthrough and evidence exports exclude the local official-data st
   expect(saved.report.recovery.runs.every((r: { ledger?: unknown }) => !('ledger' in r))).toBe(true);
   expect((await (await page.request.get('/api/validation')).json()).rows).toEqual([]);
   expect((await page.request.get('/docs')).status()).toBe(404);
+});
+
+
+test('public evidence includes synthetic results but no filesystem inventory', async ({ page }) => {
+  await page.goto('/#evidence');
+  await expect(page.getByRole('heading', { name: 'What does this experiment establish?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keep the workbench small.' })).toHaveCount(0);
+  const response = await (await page.request.get('/api/storage')).json();
+  expect(response).toEqual({ status: 'unavailable', reason: 'Storage inventory is local-only' });
+  const evidence = await (await page.request.get('/api/evidence')).json();
+  expect(evidence.mode).toBe('synthetic');
+  expect(evidence.provenance.release_profile).toBe('public_synthetic');
+  expect(JSON.stringify(evidence)).not.toContain('/Users/');
+  expect((await page.request.post('/api/storage')).status()).toBe(403);
 });

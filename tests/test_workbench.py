@@ -180,6 +180,11 @@ class PublicProfileTests(unittest.TestCase):
             saved = client.get("/api/experiments/" + app.state.experiment_id).json()
             self.assertNotIn("ledger", saved["report"]["replay"]["runs"][0])
             self.assertEqual(saved["provenance"]["release_profile"], "public_synthetic")
+            self.assertEqual(client.get("/api/storage").json(), {"status": "unavailable", "reason": "Storage inventory is local-only"})
+            evidence = client.get("/api/evidence").json()
+            self.assertEqual(evidence["mode"], "synthetic")
+            self.assertEqual(evidence["provenance"]["release_profile"], "public_synthetic")
+            self.assertNotIn("/Users/", json.dumps(evidence))
             for route in ("/docs", "/redoc", "/openapi.json"):
                 self.assertEqual(client.get(route).status_code, 404)
             self.assertEqual(client.get("/", headers={"Host": "untrusted.example"}).status_code, 400)

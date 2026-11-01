@@ -1,7 +1,7 @@
 const el = id => document.getElementById(id);
 const pct = x => (x * 100).toFixed(1) + '%';
 const state = { validation: [], forecasts: [], page: 0 };
-const pages = {overview: 'Overview', showcase: 'Guided showcase', studio: 'Prediction Studio', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', diagnostics: 'Model diagnostics', reliability: 'Model reliability', replay: 'Time replay', recovery: 'Retraining comparison', decisions: 'Decision trade-offs', challenge: 'Synthetic challenges', inference: 'Batch inference', forecasts: 'Forecast explorer'};
+const pages = {overview: 'Overview', evidence: 'Evidence summary', showcase: 'Guided showcase', studio: 'Prediction Studio', build: 'Dataset build', data: 'Data & validation', experiments: 'Experiments', models: 'Model evaluation', diagnostics: 'Model diagnostics', reliability: 'Model reliability', replay: 'Time replay', recovery: 'Retraining comparison', decisions: 'Decision trade-offs', challenge: 'Synthetic challenges', inference: 'Batch inference', forecasts: 'Forecast explorer'};
 let forecastRequest = 0;
 const legacyLoads = new Map();
 let legacyReads = Promise.resolve();
@@ -57,6 +57,8 @@ function showView(route) {
   const [path, query = ''] = route.split('?');
   let [name, identifier] = path.split('/');
   if (!Object.hasOwn(pages, name)) name = 'overview';
+  const research = el('research-navigation');
+  if (research.querySelector('[data-view="' + name + '"]')) research.open = true;
   ++forecastRequest;
   el('status').hidden = true;
   document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== name; });
@@ -266,7 +268,8 @@ get('/api/health').then(r => {
     document.querySelector('[data-view="build"]').closest('.nav-group').hidden = true;
     el('readiness-headline').closest('.track-card').hidden = true;
     el('pilot-summary').closest('.panel').hidden = true;
-    const tryButton = document.querySelector('#overview .hero-actions [data-view="inference"]');
+    document.querySelector('.overview-research-details').hidden = true;
+    const tryButton = document.querySelector('#overview .hero-actions [data-view="studio"]');
     tryButton.dataset.view = 'studio';
     tryButton.textContent = 'Try Prediction Studio';
     document.querySelector('#overview .hero-description').textContent = 'A synthetic ML research workbench. Inspect predictions, test changes over time, and connect rankings to explicit decisions.';

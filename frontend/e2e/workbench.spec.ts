@@ -1,4 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function navigate(page: Page, name: string) {
+  const button = page.getByRole('navigation').getByRole('button', { name, exact: true, includeHidden: true });
+  if (!await button.isVisible()) await page.getByText('Research tools', { exact: true }).click();
+  await button.click();
+}
+
 
 test('source-use gates remain distinct and changed dataset versions block local predictions', async ({ page }) => {
   await page.goto('/#data');
@@ -7,7 +14,7 @@ test('source-use gates remain distinct and changed dataset versions block local 
   await expect(sourceRow.getByText('Allowed scope', { exact: true })).toHaveCount(1);
   await expect(sourceRow.getByText('Blocked', { exact: true })).toHaveCount(4);
   await expect(page.getByText('No permissions are granted by this screen.', { exact: false })).toBeVisible();
-  await page.getByRole('navigation').getByRole('button', { name: 'Batch inference', exact: true }).click();
+  await navigate(page, 'Batch inference');
   await expect(page.getByRole('heading', { name: 'Catch changes before prediction.' })).toBeVisible();
   await expect(page.locator('.contract-check')).toHaveCount(7);
   await expect(page.locator('#contract-version')).toContainText('Dataset version reused');
@@ -41,10 +48,10 @@ test('Overview is the landing page and sharp corners persist across themes and w
       expect(await page.locator(selector).evaluateAll(elements => elements.every(element => getComputedStyle(element).borderRadius === '0px'))).toBe(true);
     }
   }
-  await page.getByRole('navigation').getByRole('button', { name: 'Prediction Studio', exact: true }).click();
+  await navigate(page, 'Prediction Studio');
   await expect(page.getByText('From intercept to score.', { exact: true })).toBeVisible();
   expect(await page.locator('.prediction-card, .waterfall-scroll').evaluateAll(elements => elements.every(element => getComputedStyle(element).borderRadius === '0px'))).toBe(true);
-  await page.getByRole('navigation').getByRole('button', { name: 'Guided showcase', exact: true }).click();
+  await navigate(page, 'Guided showcase');
   await expect(page.getByRole('button', { name: /Start guided walkthrough/ })).toBeVisible();
 });
 
@@ -91,7 +98,7 @@ test('guided showcase connects all five workspaces and recovery retains all seed
   }
   await guide.getByRole('button', { name: 'Finish walkthrough' }).click();
   await expect(guide).toHaveCount(0);
-  await page.getByRole('navigation').getByRole('button', { name: 'Retraining comparison', exact: true }).click();
+  await navigate(page, 'Retraining comparison');
   await expect(page.getByText('Does updating actually help?', { exact: true })).toBeVisible();
   await page.getByRole('combobox', { name: 'Recovery scenario' }).selectOption('stable');
   await page.getByRole('combobox', { name: 'Recovery chart metric' }).selectOption('average_precision');
@@ -117,7 +124,7 @@ test('all routes and Light/Dark/System against the running Python app', async ({
   await control.selectOption('system');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   for (const [route, heading] of [
-    ['Overview', 'Know your model. Beyond the score.'], ['Experiments', 'Experiment workspace'],
+    ['Overview', 'Know your model. Beyond the score.'], ['Evidence summary', 'The result and its limits.'], ['Experiments', 'Experiment workspace'],
     ['Batch inference', 'From model to prediction.'], ['Forecast explorer', 'Forecast explorer'],
     ['Model evaluation', 'Model evaluation'], ['Model diagnostics', 'Understand the failures.'],
     ['Model reliability', 'Beyond a single score.'], ['Time replay', 'Watch the evidence arrive.'],
@@ -126,7 +133,7 @@ test('all routes and Light/Dark/System against the running Python app', async ({
     ['Prediction Studio', 'A prediction you can inspect.'], ['Retraining comparison', 'Test the update, not the assumption.'],
     ['Decision trade-offs', 'A score is not a decision.'], ['Guided showcase', 'The story behind the model.'],
   ]) {
-    await page.getByRole('navigation').getByRole('button', { name: route, exact: true }).click();
+    await navigate(page, route);
     await expect(page.getByRole('heading', { name: heading, level: 1, exact: true })).toBeVisible();
   }
   expect(failures).toEqual([]);
@@ -172,9 +179,38 @@ test('320px navigation keeps the appearance control accessible', async ({ page }
   await page.goto('/');
   await expect(page.getByRole('navigation')).toBeHidden();
   await page.getByRole('button', { name: 'Browse workspace' }).click();
-  await page.getByRole('navigation').getByRole('button', { name: 'Time replay', exact: true }).click();
+  await navigate(page, 'Time replay');
   await expect(page.getByRole('navigation')).toBeHidden();
   await expect(page.getByRole('heading', { name: 'Watch the evidence arrive.' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Appearance' }).selectOption('dark');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
+
+test('main workflow stays compact and evidence exports preserve the saved results', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#research-navigation')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#workspace-navigation > .nav-group [data-view]')).toHaveCount(5);
+  const steps = page.getByLabel('Main prediction workflow').getByRole('link');
+  await expect(steps).toHaveCount(4);
+  await steps.nth(3).click();
+  await expect(page.getByRole('heading', { name: 'What does this experiment establish?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keep the workbench small.' })).toBeVisible();
+  const result = await (await page.request.get('/api/evidence')).json();
+  const raw = await (await page.request.get('/api/report')).json();
+  expect(result.comparisons[0].average_precision).toBe(raw.model.average_precision);
+  expect(result.support.count).toBe(raw.splits.test.count);
+  expect(result.support.captured + result.support.missed).toBe(result.support.positives);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Export concise report' }).click()]);
+  expect(download.suggestedFilename()).toBe('signalrank-evidence.md');
+  for (const theme of ['dark', 'light']) {
+    await page.getByRole('combobox', { name: 'Appearance' }).selectOption(theme);
+    await expect(page.getByRole('region', { name: /Evidence model comparisons/ })).toBeVisible();
+  }
+  await page.setViewportSize({ width: 320, height: 720 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/#replay');
+  await expect(page.locator('#research-navigation')).toHaveAttribute('open', '');
+  await expect(page.getByRole('navigation').getByRole('button', { name: 'Time replay', exact: true })).toHaveAttribute('aria-current', 'page');
 });

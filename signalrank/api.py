@@ -16,6 +16,9 @@ from signalrank.scope import review as scope_review
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
+from signalrank.evidence import build as evidence_summary, markdown as evidence_markdown
+from signalrank.paths import data_home
+from signalrank.storage import inventory
 from signalrank.replay import at_checkpoint
 from signalrank.studio import explain
 from signalrank.inference import DESCRIPTIONS
@@ -96,6 +99,37 @@ def experiment_snapshot(identifier: str):
     if result is None:
         raise HTTPException(status_code=404, detail="Experiment snapshot not found")
     return result
+
+
+def current_evidence():
+    saved = app.state.history.get(app.state.experiment_id)
+    model = next(iter(app.state.models.values()), (None, {}))[1]
+    return evidence_summary(saved["report"], {"snapshot_id": saved["id"], "created_at": saved["created_at"], **saved["provenance"],
+                            **{key: model[key] for key in ("artifact_id", "run_id", "runtime", "code_sha256") if key in model}})
+
+
+@app.get("/api/evidence")
+def evidence_report():
+    return current_evidence()
+
+
+@app.get("/api/export/evidence")
+def export_evidence():
+    return Response(evidence_markdown(current_evidence()), media_type="text/markdown",
+                    headers={"Content-Disposition": 'attachment; filename="signalrank-evidence.md"'})
+
+
+@app.get("/api/storage")
+def storage_report():
+    if app.state.settings.public:
+        return {"status": "unavailable", "reason": "Storage inventory is local-only"}
+    directory = os.environ.get("SIGNALRANK_TRUSTED_MODEL_DIR")
+    root = Path(directory).resolve().parent.parent if directory else data_home() / "demo"
+    try:
+        result = inventory(root)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise HTTPException(409, "Storage inventory could not be read safely") from error
+    return {"status": "available", **{key: value for key, value in result.items() if key != "plan"}}
 
 
 @app.get("/api/report")
