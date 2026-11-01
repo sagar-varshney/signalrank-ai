@@ -52,3 +52,8 @@ Every demo execution gets a new `artifacts/demo/runs/RUN_ID` directory. It conta
 ## Honest portfolio framing
 
 Describe implemented engineering: FastAPI, React/TypeScript, scikit-learn pipelines, chronological validation, calibrated rare-event ranking, model artifacts, feature ablations, permutation importance, delayed-label replay, distribution monitoring, multi-seed synthetic challenges, locked dependencies and real-browser tests. Do not claim production deployment, real-world accuracy, legal certification, an LLM/transformer, or a guaranteed ATS improvement. Real-data training and publication remain gated separately.
+
+
+## Evidence and storage update
+
+Overview remains the entry point. The main workflow ends at `#evidence`, a derived summary of saved results with a concise Markdown export. Advanced tools live under Research tools and keep their direct routes. New demo output uses local application storage and reuses compatible completed runs; `--retrain` creates a fresh execution. See [STORAGE.md](STORAGE.md) for retained legacy databases and reviewed CLI cleanup. No data download or cleanup runs automatically. See [REAL-DATA-FEASIBILITY.md](REAL-DATA-FEASIBILITY.md) before any external-data expansion.

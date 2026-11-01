@@ -17,6 +17,14 @@ The versioned `fictional-input-v1` contract rejects missing/unknown fields, inva
 
 These commands inspect local evidence without downloading data or fitting models. The comparison lists added/removed/changed records; compatibility is not a performance claim. Scheduler and credible real-data error analysis remain later steps, contingent on permission and scientific feasibility.
 
+## A smaller, clearer workflow
+
+The main navigation follows inputs → ranked forecasts → Prediction Studio → Evidence summary. Research tools remain available in a collapsed group, direct links and Cmd/Ctrl+K. Overview remains the landing page; sharp corners and Light/Dark/System are retained.
+
+`#evidence` combines saved same-cohort baselines, support, chronological dates, weaker supported slices and limitations. `/api/evidence` exports JSON; `/api/export/evidence` exports a concise Markdown report. These derive from existing saved results without training, model selection or invented uncertainty.
+
+[STORAGE.md](STORAGE.md) covers compatible demo-run reuse, local application storage defaults and explicit retention previews. No existing model, database or environment is moved or deleted. [REAL-DATA-FEASIBILITY.md](REAL-DATA-FEASIBILITY.md) defines a bounded next review; no new real-data acquisition or training is enabled.
+
 ## Run locally
 
 For the pinned development/test environment, install uv 0.12.23 from PyPI, then:
@@ -38,7 +46,7 @@ python3 -m venv .venv
 ```
 
 Open http://127.0.0.1:8010. API documentation is at `/docs`.
-Run `.venv/bin/python -m signalrank.core` for the reproducible JSON benchmark without the web app. Default demo startup trains the small deterministic experiment once per process. The offline training workflow below saves versioned artifacts and lets the app serve them without retraining.
+Run `.venv/bin/python -m signalrank.core` for the reproducible JSON benchmark without the web app. Plain API startup fits the small synthetic baseline once per process; the demo command reuses a compatible saved artifact when available. The offline training workflow below saves versioned artifacts and lets the app serve them without retraining.
 
 ## What is implemented
 
@@ -87,7 +95,7 @@ Each training execution gets its own UUID and `run.json` with configuration, sta
 
 `requirements-local.lock.txt` records the installed development versions for Python 3.13.7/macOS. It is not a hash-secured lockfile, license clearance or cross-platform reproducibility guarantee. See [RESEARCH-PROTOCOL.md](RESEARCH-PROTOCOL.md) for the study specification, scientific gates and explicit exclusions. No new official-source downloads, training permission changes, EPSS ingestion or public release occur in this milestone.
 
-Every successful local-profile app startup captures the synthetic experiment in `artifacts/experiments.sqlite3` (ignored by Git). The canonical report, forecasts and provenance determine a SHA-256 snapshot ID. Identical payloads deduplicate, preserving their first-save timestamp; changed results, core model code or runtime versions produce a distinct snapshot. This is snapshot history, not a log of every execution. Existing snapshots are never updated by the application. SQLite is local storage, not a tamper-proof audit service or a multi-user deployment.
+Every successful local-profile app startup captures the synthetic experiment in its configured SQLite history. Existing `artifacts/experiments.sqlite3` stays the default when present; otherwise the default is under local application storage (see STORAGE.md). The canonical report, forecasts and provenance determine a SHA-256 snapshot ID. Identical payloads deduplicate, preserving their first-save timestamp; changed results, core model code or runtime versions produce a distinct snapshot. This is snapshot history, not a log of every execution. Existing snapshots are never updated by the application. SQLite is local storage, not a tamper-proof audit service or a multi-user deployment.
 
 Set `SIGNALRANK_HISTORY_PATH` to use another local SQLite file. Keep the database when moving or backing up your workspace; a fresh clone creates its own history. Initialization errors fail startup rather than silently discarding history. Tests use temporary databases.
 
@@ -107,7 +115,7 @@ After installing the project into a Python 3.11+ virtual environment, run:
 .venv/bin/python -m signalrank.demo --no-serve
 ```
 
-The command creates a new run under `artifacts/demo/runs/`, exports `experiment-report.md`, and serves the saved model at `http://127.0.0.1:8015/#overview` unless `--no-serve` is supplied. Optional `--config`, `--output` and `--port` customize the local demo. Training and serving make no external data requests. Software installation may require network access. The demo deliberately clears inherited extra trusted-model paths and uses history/receipts under its output root. It preserves previous runs and does not automatically open a browser. See [DEMO.md](DEMO.md) for the recruiter walkthrough and [ARCHITECTURE.md](ARCHITECTURE.md) for implementation boundaries.
+The command reuses the newest compatible run or creates one under `~/.local/share/signalrank/demo/runs/`, exports `experiment-report.md`, and serves the saved model at `http://127.0.0.1:8015/#overview` unless `--no-serve` is supplied. Optional `--config`, `--output` and `--port` customize the local demo; `--retrain` explicitly requests a new execution. `SIGNALRANK_DATA_HOME` overrides the default local application-data root. Training and serving make no external data requests. Software installation may require network access. The demo deliberately clears inherited extra trusted-model paths and uses history/receipts under its output root. It preserves previous runs and does not automatically open a browser. See [DEMO.md](DEMO.md) for the recruiter walkthrough and [ARCHITECTURE.md](ARCHITECTURE.md) for implementation boundaries.
 
 `#reliability` reads saved offline results from `/api/reliability`; it does not fit models on a request. Normal startup without a newly trained artifact shows instructions, not invented results. The workspace includes:
 
@@ -193,7 +201,7 @@ Manifest schema is now v2. Older artifact directories are preserved but fail clo
 
 `GET /api/inference/sample?seed=2026&count=20` generates original fictional inputs without labels. `POST /api/batches` requires `source: "synthetic"`, an allowlisted artifact ID, and 1–500 unique `SYN-BATCH-*` records, each containing one of five exact original descriptions, finite severity 1–10 and strict remote/authentication booleans. Extra fields, outcomes, external descriptions, invalid types and duplicate IDs are rejected. Request bodies above 256 KiB are rejected independently of Content-Length. This is not general CVE/SBOM ingestion.
 
-Successful submissions append UUID receipts to ignored `artifacts/batches.sqlite3` (override with `SIGNALRANK_BATCH_PATH`). Receipts preserve ranked outputs, original input order, timestamp, input hash, training run/artifact IDs, training-code hashes, runtime, inference-code hash and receipt checksum. They contain no invented outcomes or accuracy metrics. Each submission is a distinct execution, and mutations are not retried automatically; refresh history before resubmitting if a response is lost. `GET /api/batches` is paginated; `GET /api/batches/{id}` exports the full receipt. Back up both SQLite databases and trusted artifact directories.
+Successful submissions append UUID receipts to a local receipt database (existing `artifacts/batches.sqlite3` if present, otherwise local application storage; override with `SIGNALRANK_BATCH_PATH`). Receipts preserve ranked outputs, original input order, timestamp, input hash, training run/artifact IDs, training-code hashes, runtime, inference-code hash and receipt checksum. They contain no invented outcomes or accuracy metrics. Each submission is a distinct execution, and mutations are not retried automatically; refresh history before resubmitting if a response is lost. `GET /api/batches` is paginated; `GET /api/batches/{id}` exports the full receipt. Back up both SQLite databases and trusted artifact directories.
 
 This is a loopback single-user workbench, not an authenticated public service. Host checks, cross-origin mutation rejection and bounded bodies are defensive measures, not a deployment security review. No update/delete API exists, but local owners can edit SQLite; checksums detect accidental changes, not malicious rewrites. All new inputs remain fictional and no source permission was expanded.
 
