@@ -17,6 +17,7 @@ import joblib
 import numpy
 import sklearn
 
+from signalrank.paths import data_home
 from signalrank.core import Experiment, TrainingConfig, generate, split
 from signalrank.diagnostics import build as diagnostics
 from signalrank.benchmark import build as benchmark
@@ -41,8 +42,8 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n")
 
 
-def train(config, root=Path("artifacts")):
-    root = Path(root)
+def train(config, root=None):
+    root = Path(root) if root is not None else data_home()
     run_id = uuid4().hex
     directory = root / "runs" / run_id
     directory.mkdir(parents=True, exist_ok=False)
@@ -125,7 +126,7 @@ def load_artifact(directory, *, trusted_local=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, help="JSON TrainingConfig; synthetic only")
-    parser.add_argument("--output", type=Path, default=Path("artifacts"))
+    parser.add_argument("--output", type=Path, default=data_home())
     parser.add_argument("--inspect-artifact", type=Path, help="Reload a saved model and reproduce its top forecasts")
     parser.add_argument("--trusted-local-artifact", action="store_true")
     args = parser.parse_args()

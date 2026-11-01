@@ -5,6 +5,7 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
+from signalrank.paths import database_path
 import sqlite3
 from uuid import uuid4
 from importlib.resources import files
@@ -35,7 +36,7 @@ def fingerprint(value):
 
 class BatchStore:
     def __init__(self, path=None):
-        self.path = Path(path or os.environ.get("SIGNALRANK_BATCH_PATH", "artifacts/batches.sqlite3"))
+        self.path = Path(path) if path is not None else database_path("SIGNALRANK_BATCH_PATH", "batches.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS batches (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL, sha256 TEXT NOT NULL)")

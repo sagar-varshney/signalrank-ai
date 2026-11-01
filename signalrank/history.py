@@ -6,6 +6,7 @@ from importlib.resources import files
 import json
 import os
 from pathlib import Path
+from signalrank.paths import database_path
 import platform
 import sqlite3
 
@@ -39,7 +40,7 @@ def snapshot(experiment):
 
 class ExperimentStore:
     def __init__(self, path=None):
-        self.path = Path(path or os.environ.get("SIGNALRANK_HISTORY_PATH", "artifacts/experiments.sqlite3"))
+        self.path = Path(path) if path is not None else database_path("SIGNALRANK_HISTORY_PATH", "experiments.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS experiments (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)")
