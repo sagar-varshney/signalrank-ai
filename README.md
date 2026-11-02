@@ -259,3 +259,8 @@ This project is a standalone Git repository within the larger local workspace. R
 6. Consider grounded summaries only after model/weight/tokenizer licensing and factual-evaluation review.
 
 See [GOVERNANCE.md](GOVERNANCE.md) for current evidence and release restrictions. Existing scouting files are outside this project's implementation.
+
+
+### Archived real-data feasibility review
+
+`python -m signalrank.study` and local Data & validation now review existing archive integrity, record accounting, candidate timestamp consistency and cached snapshot/feature/provisional-label checks. They report missing evidence and scientific blockers without acquisition, fitting or file writes. The 32 MiB local-read budget is separate from the proposed future download budget. `/api/study-readiness` is read-only and excludes all local evidence in public mode. See [REAL-DATA-FEASIBILITY.md](REAL-DATA-FEASIBILITY.md) for exact limits and interpretation.

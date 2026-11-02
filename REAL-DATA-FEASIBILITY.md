@@ -48,3 +48,16 @@ The interval, revisions, frame and uncertainty requirements are **not chosen her
 Proceed to a separately reviewed fitting phase only if source-use gates permit it, historical features and mature outcomes can be justified, partitions contain both classes with adequate support for the declared uncertainty requirements, and all exclusions/budget use are accounted for. Both classes alone are not proof of adequacy.
 
 Report partition dates/counts/positives, missingness, exclusions, unresolved provenance and consumed requests/bytes even if the decision is to stop. Keep final outcomes out of tuning and do not inspect final-model metrics until configurations and thresholds are frozen. If the existing target is infeasible within the free/local budget, retain the honest synthetic engineering demonstration and record that finding. Any alternative target or dataset requires a fresh review before implementation.
+
+
+## Implemented: read-only archived-evidence review
+
+Run `python -m signalrank.study` in the existing environment, or open Data & validation. `/api/study-readiness` returns the local report and the browser can export it. The command prints JSON to stdout without creating files; redirect only to a chosen local path if you want a persistent report.
+
+The review recomputes selection/row accounting; verifies the two archived notices, pinned catalog and content-addressed snapshot/meta hashes; checks row cutoff/maturity dates; and replays candidate snapshot, feature and provisional-label checks using verified cached bytes. It reports missing historical metrics and publication years separately from identifier-year selection. These checks do not prove archive authenticity, first public availability, historical outcome validity, legal clearance or adequate sample size.
+
+The read budget is 32 MiB total and 2 MiB per file, with deduplicated reads. Symlinks are not followed, missing/changed/oversized files remain unresolved, and a budget limit never counts as a pass. The report includes input hashes and at most 20 file issues; no raw source records or text are exported by this endpoint. A missing cohort is explicitly unavailable, not an observed zero-positive dataset. Public mode short-circuits before any local archive read and returns no cohort, hashes or file inventory.
+
+Real-data fitting and acquisition remain disabled in this review regardless of passing local checks or edited source flags. No downloader, automatic repair, relabelling, new model, paid service or final evaluation is introduced. Existing saved synthetic models remain compatible because the training pipeline and its fingerprinted code were not changed.
+
+The first execution and its scientific stop decision are recorded in [the 2 November archived-evidence review](research/archived-evidence-review-2026-11-02.md). The input archive is retained locally and is not added to Git.

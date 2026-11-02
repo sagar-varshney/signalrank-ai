@@ -117,7 +117,7 @@ describe('shipped appearance and navigation', () => {
 describe('editorial theme legibility', () => {
   it('keeps interface corners square while preserving circular status and chart markers', () => {
     const sheets = ['app.css', 'workspace.css', 'editorial.css'].map(read);
-    for (const name of ['experiments', 'lab', 'reliability', 'replay', 'workbench', 'evidence']) sheets.push(readFileSync(new URL('./' + name + '.css', import.meta.url), 'utf8'));
+    for (const name of ['experiments', 'lab', 'reliability', 'replay', 'workbench', 'evidence', 'study']) sheets.push(readFileSync(new URL('./' + name + '.css', import.meta.url), 'utf8'));
     const radii = sheets.flatMap(sheet => Array.from(sheet.matchAll(/border-radius\s*:\s*([^;}]+)/g), match => match[1].trim()));
     expect(radii.length).toBeGreaterThan(20);
     expect(radii.every(value => value === '0' || value === '50%')).toBe(true);

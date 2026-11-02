@@ -15733,8 +15733,212 @@ function In() {
 	});
 }
 //#endregion
+//#region src/Study.tsx
+function Ln() {
+	let e = () => location.hash.slice(1).split(/[/?]/)[0] === "data", [t, n] = (0, y.useState)(e);
+	(0, y.useEffect)(() => {
+		let t = () => n(e());
+		return window.addEventListener("hashchange", t), window.addEventListener("signalrank:view", t), () => {
+			window.removeEventListener("hashchange", t), window.removeEventListener("signalrank:view", t);
+		};
+	}, []);
+	let r = O({
+		queryKey: ["study-readiness"],
+		queryFn: ({ signal: e }) => k("/api/study-readiness", e),
+		enabled: t,
+		staleTime: Infinity
+	});
+	if (!t) return null;
+	if (r.error) return /* @__PURE__ */ (0, b.jsxs)("article", {
+		className: "panel",
+		role: "alert",
+		children: [
+			/* @__PURE__ */ (0, b.jsx)("h2", { children: "Local evidence review unavailable" }),
+			/* @__PURE__ */ (0, b.jsx)("p", { children: r.error.message }),
+			/* @__PURE__ */ (0, b.jsx)("button", {
+				className: "button",
+				onClick: () => void r.refetch(),
+				children: "Retry local review"
+			})
+		]
+	});
+	if (!r.data) return /* @__PURE__ */ (0, b.jsx)("p", {
+		role: "status",
+		children: "Checking existing local evidence…"
+	});
+	let i = r.data;
+	if (i.status === "unavailable") return /* @__PURE__ */ (0, b.jsx)("p", {
+		className: "notice subtle",
+		children: i.reason
+	});
+	if (!i.cohort || !i.archive || !i.read_budget) return /* @__PURE__ */ (0, b.jsx)("p", {
+		className: "error",
+		role: "alert",
+		children: "The local review is incomplete. No readiness decision can be inferred."
+	});
+	let a = i.cohort, o = i.archive, s = i.read_budget;
+	return /* @__PURE__ */ (0, b.jsxs)("article", {
+		className: "panel study-panel",
+		children: [
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "panel-head",
+				children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+					className: "overline",
+					children: "REAL DATA / EXISTING EVIDENCE ONLY"
+				}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Can this cohort support an evaluation?" })] }), /* @__PURE__ */ (0, b.jsxs)("div", {
+					className: "study-actions",
+					children: [/* @__PURE__ */ (0, b.jsx)("button", {
+						className: "button",
+						disabled: r.isFetching,
+						onClick: () => void r.refetch(),
+						children: r.isFetching ? "Reviewing…" : "Recheck local evidence"
+					}), /* @__PURE__ */ (0, b.jsx)("a", {
+						className: "button",
+						href: "/api/study-readiness",
+						download: "signalrank-study-review.json",
+						children: "Export local review"
+					})]
+				})]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("p", {
+				className: "study-decision",
+				children: [
+					/* @__PURE__ */ (0, b.jsx)("span", {
+						className: "badge warning",
+						children: "Fitting blocked"
+					}),
+					" ",
+					i.decision
+				]
+			}),
+			/* @__PURE__ */ (0, b.jsx)("div", {
+				className: "metrics study-metrics",
+				children: [
+					[
+						"Selected records",
+						a.available ? String(a.selected) : "Unavailable",
+						a.available ? `${a.processed} processed · ${a.candidates} candidates` : "Local cohort evidence could not be read"
+					],
+					[
+						"Positive candidates",
+						a.available ? String(a.candidate_labels.positive ?? 0) : "Unavailable",
+						a.available ? `${a.candidate_labels["provisional negative"] ?? 0} provisional negatives; not verified negatives` : "Outcome support is unknown"
+					],
+					[
+						"Missing historical metrics",
+						a.available ? String(a.missing_metrics) : "Unavailable",
+						a.available ? `Of ${a.candidates} candidates · ${a.unknown_metrics} unknown flags` : "Feature availability is unknown"
+					]
+				].map(([e, t, n]) => /* @__PURE__ */ (0, b.jsxs)("div", {
+					className: "metric",
+					children: [
+						/* @__PURE__ */ (0, b.jsx)("span", {
+							className: "metric-label",
+							children: e
+						}),
+						/* @__PURE__ */ (0, b.jsx)("strong", {
+							className: "metric-value",
+							children: t
+						}),
+						/* @__PURE__ */ (0, b.jsx)("span", {
+							className: "metric-note",
+							children: n
+						})
+					]
+				}, e))
+			}),
+			/* @__PURE__ */ (0, b.jsx)("p", {
+				className: "caption",
+				children: i.warning
+			}),
+			/* @__PURE__ */ (0, b.jsx)(A, {
+				label: "Real-data feasibility gates",
+				children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+					/* @__PURE__ */ (0, b.jsx)("th", { children: "Check" }),
+					/* @__PURE__ */ (0, b.jsx)("th", { children: "Finding" }),
+					/* @__PURE__ */ (0, b.jsx)("th", { children: "Status" })
+				] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: i.gates?.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+					/* @__PURE__ */ (0, b.jsx)("td", { children: e.name }),
+					/* @__PURE__ */ (0, b.jsx)("td", { children: e.finding }),
+					/* @__PURE__ */ (0, b.jsx)("td", { children: /* @__PURE__ */ (0, b.jsx)("span", {
+						className: "badge" + (e.status === "verified" ? "" : " warning"),
+						children: e.status === "verified" ? "Verified local check" : e.status === "blocked" ? "Blocked" : "Unresolved"
+					}) })
+				] }, e.id)) })] })
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("div", {
+				className: "study-details",
+				children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("h3", { children: "What was checked locally" }), /* @__PURE__ */ (0, b.jsxs)("ul", { children: [
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						o.verified_payloads,
+						" / ",
+						o.unique_payloads,
+						" unique payload files match their hashes."
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						o.verified_metadata,
+						" / ",
+						o.unique_metadata,
+						" cache metadata entries agree with their references."
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						o.references,
+						" reference entries reviewed; ",
+						o.catalog_verified ? "catalog checksum matches" : "catalog evidence unresolved",
+						"."
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("li", { children: [
+						o.notices.filter((e) => e.status === "verified").length,
+						" / ",
+						o.notices.length,
+						" archived source notices match recorded hashes."
+					] })
+				] })] }), /* @__PURE__ */ (0, b.jsxs)("div", { children: [
+					/* @__PURE__ */ (0, b.jsx)("h3", { children: "Publication years in candidate rows" }),
+					Object.keys(a.candidate_publication_years).length ? /* @__PURE__ */ (0, b.jsx)("dl", {
+						className: "study-years",
+						children: Object.entries(a.candidate_publication_years).map(([e, t]) => /* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("dt", { children: e }), /* @__PURE__ */ (0, b.jsxs)("dd", { children: [t, " candidates"] })] }, e))
+					}) : /* @__PURE__ */ (0, b.jsx)("p", { children: "Publication-year evidence unavailable." }),
+					/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "caption",
+						children: "A CVE identifier year does not define the publication year. This is an exploratory selection, not a new representative cohort."
+					})
+				] })]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("details", { children: [
+				/* @__PURE__ */ (0, b.jsx)("summary", { children: "Read budget, missing evidence and limitations" }),
+				/* @__PURE__ */ (0, b.jsxs)("p", { children: [
+					(s.bytes_read / 1048576).toFixed(2),
+					" / ",
+					(s.limit_bytes / 1048576).toFixed(0),
+					" MiB read · ",
+					s.network_requests,
+					" network requests · ",
+					s.bytes_written,
+					" bytes written. ",
+					s.exhausted ? "Read limit reached; evidence remains unresolved." : "No acquisition or repair performed."
+				] }),
+				/* @__PURE__ */ (0, b.jsxs)("p", { children: [i.issue_count ?? 0, " local file issues. Up to 20 are shown; export the input fingerprints for reproducibility."] }),
+				!!i.issues?.length && /* @__PURE__ */ (0, b.jsx)(A, {
+					label: "Local archive issues",
+					children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+						/* @__PURE__ */ (0, b.jsx)("th", { children: "File" }),
+						/* @__PURE__ */ (0, b.jsx)("th", { children: "Status" }),
+						/* @__PURE__ */ (0, b.jsx)("th", { children: "Reason" })
+					] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: i.issues.map((e, t) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+						/* @__PURE__ */ (0, b.jsx)("td", { children: /* @__PURE__ */ (0, b.jsx)("code", { children: e.file }) }),
+						/* @__PURE__ */ (0, b.jsx)("td", { children: e.status }),
+						/* @__PURE__ */ (0, b.jsx)("td", { children: e.reason })
+					] }, t)) })] })
+				}),
+				/* @__PURE__ */ (0, b.jsx)("ul", { children: i.limitations?.map((e) => /* @__PURE__ */ (0, b.jsx)("li", { children: e }, e)) })
+			] })
+		]
+	});
+}
+//#endregion
 //#region src/main.tsx
-var Ln = class extends y.Component {
+var Rn = class extends y.Component {
 	state = { failed: !1 };
 	static getDerivedStateFromError() {
 		return { failed: !0 };
@@ -15750,15 +15954,16 @@ var Ln = class extends y.Component {
 			})]
 		}) : this.props.children;
 	}
-}, Rn = new it({ defaultOptions: { queries: {
+}, zn = new it({ defaultOptions: { queries: {
 	retry: !1,
 	refetchOnWindowFocus: !1
-} } }), zn = document.getElementById("experiments-root");
-zn && (0, yt.createRoot)(zn).render(/* @__PURE__ */ (0, b.jsx)(Ln, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-	client: Rn,
+} } }), Bn = document.getElementById("experiments-root");
+Bn && (0, yt.createRoot)(Bn).render(/* @__PURE__ */ (0, b.jsx)(Rn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+	client: zn,
 	children: /* @__PURE__ */ (0, b.jsx)(Gt, {})
 }) }));
 for (let [e, t] of [
+	["study-root", Ln],
 	["evidence-root", In],
 	["diagnostics-root", Ft],
 	["inference-root", Rt],
@@ -15772,8 +15977,8 @@ for (let [e, t] of [
 	["guide-root", jn]
 ]) {
 	let n = document.getElementById(e);
-	n && (0, yt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(Ln, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
-		client: Rn,
+	n && (0, yt.createRoot)(n).render(/* @__PURE__ */ (0, b.jsx)(Rn, { children: /* @__PURE__ */ (0, b.jsx)(ne, {
+		client: zn,
 		children: /* @__PURE__ */ (0, b.jsx)(t, {})
 	}) }));
 }

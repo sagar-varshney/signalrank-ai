@@ -214,3 +214,26 @@ test('main workflow stays compact and evidence exports preserve the saved result
   await expect(page.locator('#research-navigation')).toHaveAttribute('open', '');
   await expect(page.getByRole('navigation').getByRole('button', { name: 'Time replay', exact: true })).toHaveAttribute('aria-current', 'page');
 });
+
+
+test('local feasibility separates archive checks from scientific readiness across themes', async ({ page }) => {
+  await page.goto('/#data');
+  await expect(page.getByRole('heading', { name: 'Can this cohort support an evaluation?' })).toBeVisible();
+  const panel = page.locator('.study-panel');
+  await expect(panel.getByText('Fitting blocked', { exact: true })).toBeVisible();
+  const result = await (await page.request.get('/api/study-readiness')).json();
+  expect(result.training_enabled).toBe(false);
+  expect(result.acquisition_enabled).toBe(false);
+  expect(result.cohort.candidates).toBe(428);
+  expect(result.cohort.candidate_labels['provisional negative']).toBe(428);
+  expect(result.gates.find((g: { id: string }) => g.id === 'history').status).toBe('unresolved');
+  await expect(panel.getByRole('region', { name: /Real-data feasibility gates/ }).locator('tbody tr')).toHaveCount(9);
+  for (const theme of ['dark', 'light', 'system']) {
+    await page.getByRole('combobox', { name: 'Appearance' }).selectOption(theme);
+    await expect(panel.getByText('Historical outcome validity', { exact: true })).toBeVisible();
+  }
+  const [download] = await Promise.all([page.waitForEvent('download'), panel.getByRole('link', { name: 'Export local review' }).click()]);
+  expect(download.suggestedFilename()).toBe('signalrank-study-review.json');
+  await page.setViewportSize({ width: 320, height: 720 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});

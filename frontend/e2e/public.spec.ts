@@ -65,3 +65,14 @@ test('public evidence includes synthetic results but no filesystem inventory', a
   expect(JSON.stringify(evidence)).not.toContain('/Users/');
   expect((await page.request.post('/api/storage')).status()).toBe(403);
 });
+
+
+test('public profile never exposes the archived cohort review', async ({ page }) => {
+  await page.goto('/#data');
+  await expect(page.getByText('Archived real-data feasibility is local-only', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Can this cohort support an evaluation?' })).toHaveCount(0);
+  const value = await (await page.request.get('/api/study-readiness')).json();
+  expect(value).toEqual({ status: 'unavailable', reason: 'Archived real-data feasibility is local-only', training_enabled: false });
+  expect(JSON.stringify(value)).not.toContain('CVE-');
+  expect(JSON.stringify(value)).not.toContain('428');
+});
