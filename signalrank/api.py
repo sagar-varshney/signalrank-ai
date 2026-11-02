@@ -13,6 +13,7 @@ from signalrank.history import ExperimentStore, snapshot
 from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sample, DatasetVersionConflict
 from signalrank.contracts import fixture_report
 from signalrank.scope import review as scope_review
+from signalrank.study import audit as study_audit
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
@@ -322,6 +323,11 @@ def sources():
 @app.get("/api/scope")
 def scope_report():
     return scope_review(public=app.state.settings.public)
+
+
+@app.get("/api/study-readiness")
+def study_readiness():
+    return study_audit(public=app.state.settings.public)
 
 
 @app.get("/api/contracts")
