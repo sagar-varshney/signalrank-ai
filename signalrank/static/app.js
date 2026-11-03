@@ -260,7 +260,7 @@ get('/api/health').then(r => {
   state.profile = r.profile;
   state.profileReady = true;
   state.currentId = r.experiment_id;
-  el('connection-status').textContent = r.status === 'ok' ? '● API reachable · synthetic' : 'API unavailable';
+  el('connection-status').textContent = r.status === 'ok' ? '● API reachable' : 'API unavailable';
   if (r.profile === 'public') {
     document.body.dataset.profile = 'public';
     document.querySelector('nav [data-view="bikes"]').hidden = true;
