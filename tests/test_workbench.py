@@ -180,6 +180,8 @@ class PublicProfileTests(unittest.TestCase):
             saved = client.get("/api/experiments/" + app.state.experiment_id).json()
             self.assertNotIn("ledger", saved["report"]["replay"]["runs"][0])
             self.assertEqual(saved["provenance"]["release_profile"], "public_synthetic")
+            self.assertEqual(client.get("/api/bikes").json()["status"], "unavailable")
+            self.assertEqual(client.get("/api/bikes/export").status_code, 409)
             self.assertEqual(client.get("/api/study-readiness").json(), {"status": "unavailable", "reason": "Archived real-data feasibility is local-only", "training_enabled": False})
             self.assertEqual(client.get("/api/storage").json(), {"status": "unavailable", "reason": "Storage inventory is local-only"})
             evidence = client.get("/api/evidence").json()

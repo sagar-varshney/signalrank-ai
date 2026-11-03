@@ -124,7 +124,7 @@ test('all routes and Light/Dark/System against the running Python app', async ({
   await control.selectOption('system');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   for (const [route, heading] of [
-    ['Overview', 'Know your model. Beyond the score.'], ['Evidence summary', 'The result and its limits.'], ['Experiments', 'Experiment workspace'],
+    ['Overview', 'Know your model. Beyond the score.'], ['Evidence summary', 'The result and its limits.'], ['Bike demand', 'Historical demand. Measurable results.'], ['Experiments', 'Experiment workspace'],
     ['Batch inference', 'From model to prediction.'], ['Forecast explorer', 'Forecast explorer'],
     ['Model evaluation', 'Model evaluation'], ['Model diagnostics', 'Understand the failures.'],
     ['Model reliability', 'Beyond a single score.'], ['Time replay', 'Watch the evidence arrive.'],
@@ -190,7 +190,7 @@ test('320px navigation keeps the appearance control accessible', async ({ page }
 test('main workflow stays compact and evidence exports preserve the saved results', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#research-navigation')).not.toHaveAttribute('open', '');
-  await expect(page.locator('#workspace-navigation > .nav-group [data-view]')).toHaveCount(5);
+  await expect(page.locator('#workspace-navigation > .nav-group [data-view]')).toHaveCount(6);
   const steps = page.getByLabel('Main prediction workflow').getByRole('link');
   await expect(steps).toHaveCount(4);
   await steps.nth(3).click();
@@ -236,4 +236,22 @@ test('local feasibility separates archive checks from scientific readiness acros
   expect(download.suggestedFilename()).toBe('signalrank-study-review.json');
   await page.setViewportSize({ width: 320, height: 720 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
+
+test('bike benchmark renders labelled fixture evidence, comparisons and exports across themes',async({page})=>{
+  await page.goto('/#bikes');
+  await expect(page.getByRole('heading',{name:'Which hours will be busy tomorrow?'})).toBeVisible();
+  await expect(page.getByText('Original test fixture',{exact:true})).toBeVisible();
+  await expect(page.getByRole('region',{name:/Real-data model comparisons/}).locator('tbody tr')).toHaveCount(5);
+  const primary = await page.locator('.bike-delta').textContent();
+  await page.getByLabel('Displayed probability model').selectOption('boosted');
+  expect(await page.locator('.bike-delta').textContent()).toBe(primary);
+  await page.getByLabel('Comparison table interval').selectOption('development');
+  await expect(page.getByRole('img',{name:'Daily high-demand frequency and mean forecast probability'})).toBeVisible();
+  const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'Export benchmark report'}).click()]);
+  expect(download.suggestedFilename()).toBe('signalrank-bike-benchmark.md');
+  for(const theme of ['dark','light','system']) await page.getByRole('combobox',{name:'Appearance'}).selectOption(theme);
+  await page.setViewportSize({width:320,height:720});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });

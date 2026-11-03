@@ -54,3 +54,10 @@ Use your installed project Python environment. Commands print JSON without modif
 4. Optional sequential local experiment scheduler last, with fixed limits, recorded failures and separate tuning/final evaluation.
 
 Local CPU and local durable history remain the default. No GPU/paid inference API, hosted scheduler or automatic paid fallback. The free public demo serves saved synthetic evidence, not background training or durable multi-user experiment history. Provider free quotas and account terms still apply.
+
+
+## Independent local bike-demand benchmark
+
+[BIKE-BENCHMARK.md](BIKE-BENCHMARK.md) defines a separate real-data study, using UCI Seoul Bike Sharing Demand under CC BY 4.0 with retained attribution and declared modifications. Its 24-hour horizon, training-derived demand label and results do not alter the blocked KEV study or validate its predictions. Original `TrainingConfig` remains synthetic-only. The benchmark fits only through an explicit offline CLI and serves saved JSON through `/api/bikes`; the public profile returns unavailable before reading any bike source/artifact. No raw dataset or learned weights are included in Git or the public image.
+
+Run `python -m signalrank.bikes --fetch`, then `python -m signalrank.bikes --run` in the existing environment. Source and report artifacts live under local application storage (`~/.local/share/signalrank/bikes`), capped at 20 MiB. Repeating the same run reuses its validated report. `#bikes` shows the results and `/api/bikes/export` exports an attributed Markdown report. `SIGNALRANK_BIKE_ROOT` can select an operator-controlled artifact root for serving; no browser-supplied path, upload, fitting or acquisition endpoint exists.

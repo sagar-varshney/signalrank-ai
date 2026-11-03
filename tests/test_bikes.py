@@ -134,3 +134,16 @@ class BikeTests(unittest.TestCase):
             spec={**bikes.source(),"csv_sha256":bikes.digest(payload)}
             with patch("signalrank.bikes.source",return_value=spec),patch("signalrank.bikes.storage_bytes",return_value=bikes.MAX_STORAGE),patch("signalrank.bikes.evaluate",side_effect=AssertionError("must not fit")),self.assertRaises(ValueError):
                 bikes.run(root)
+
+
+    def test_web_requests_only_read_saved_evidence_and_public_short_circuits(self):
+        from fastapi.testclient import TestClient
+        from signalrank.api import app
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            env={"SIGNALRANK_PROFILE":"local","SIGNALRANK_TRUSTED_MODEL_DIR":"","SIGNALRANK_TRUSTED_MODEL_DIRS":"","SIGNALRANK_HISTORY_PATH":str(root/"history.sqlite3"),"SIGNALRANK_BATCH_PATH":str(root/"batches.sqlite3"),"SIGNALRANK_BIKE_ROOT":str(root/"bikes")}
+            with patch.dict("os.environ",env),TestClient(app) as client,patch("signalrank.bikes.evaluate",side_effect=AssertionError("no fitting")),patch("signalrank.bikes.acquire",side_effect=AssertionError("no download")):
+                self.assertEqual(client.get("/api/bikes").json()["status"],"unavailable")
+                self.assertEqual(client.get("/api/bikes/export").status_code,409)
+                self.assertEqual(client.post("/api/bikes").status_code,405)
+                self.assertFalse((root/"bikes").exists())

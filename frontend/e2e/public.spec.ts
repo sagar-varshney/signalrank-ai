@@ -76,3 +76,14 @@ test('public profile never exposes the archived cohort review', async ({ page })
   expect(JSON.stringify(value)).not.toContain('CVE-');
   expect(JSON.stringify(value)).not.toContain('428');
 });
+
+
+test('public profile keeps the independent real benchmark local-only',async({page})=>{
+  await page.goto('/#bikes');
+  await expect(page.getByRole('heading',{name:'No saved bike benchmark loaded.'})).toBeVisible();
+  await expect(page.getByRole('navigation').getByRole('button',{name:'Bike demand',exact:true})).toHaveCount(0);
+  const result=await(await page.request.get('/api/bikes')).json();
+  expect(result.status).toBe('unavailable');
+  expect(JSON.stringify(result)).not.toContain('/Users/');
+  expect((await page.request.get('/api/bikes/export')).status()).toBe(409);
+});

@@ -1,12 +1,12 @@
 # SignalRank AI
 
-A Python rare-event ML research workbench with a FastAPI dashboard and React/TypeScript UI. Its original fictional data supports calibrated text-plus-tabular ranking, chronological development evaluation, complete prediction explanations, delayed-label replay and fixed-schedule recovery comparisons. It does not claim real-world risk accuracy.
+A Python rare-event ML research workbench with a FastAPI dashboard and React/TypeScript UI. Its original fictional data supports calibrated text-plus-tabular ranking, chronological development evaluation, complete prediction explanations, delayed-label replay and fixed-schedule recovery comparisons. It does not claim real-world risk accuracy. A separately scoped real-data benchmark ranks next-day Seoul bike demand using past-only features; see [BIKE-BENCHMARK.md](BIKE-BENCHMARK.md).
 
 Overview is the default landing page. Open `#showcase` when you want the optional five-step walkthrough. The sharp-edged blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
 
 ### Scope before expansion
 
-[SCOPE-REVIEW.md](SCOPE-REVIEW.md) separates source-use permissions, scientific feasibility and release review. Local audit approval never implies real-data training or public dataset/model release. Real-data training remains disabled; the saved exploratory cohort has zero positive candidate outcomes. No new acquisition, paid service or operational accuracy claim is introduced.
+[SCOPE-REVIEW.md](SCOPE-REVIEW.md) separates source-use permissions, scientific feasibility and release review. Local audit approval never implies real-data training or public dataset/model release. KEV training remains disabled; the saved exploratory cohort has zero positive candidate outcomes. No new acquisition, paid service or operational accuracy claim is introduced.
 
 The versioned `fictional-input-v1` contract rejects missing/unknown fields, invalid values, duplicate IDs/JSON keys and unsupported schemas before local batch prediction. Optional named dataset versions become immutable on successful save; changed inputs under the same version return 409 before prediction. Old unversioned inputs/receipts remain supported with no version-identity guarantee. Repeated features under distinct IDs are reported, not silently removed. Read-only `/api/contracts` shows fixture checks and a JSON Schema; `/api/scope` shows use-specific gates (synthetic-only in the public profile).
 
@@ -264,3 +264,10 @@ See [GOVERNANCE.md](GOVERNANCE.md) for current evidence and release restrictions
 ### Archived real-data feasibility review
 
 `python -m signalrank.study` and local Data & validation now review existing archive integrity, record accounting, candidate timestamp consistency and cached snapshot/feature/provisional-label checks. They report missing evidence and scientific blockers without acquisition, fitting or file writes. The 32 MiB local-read budget is separate from the proposed future download budget. `/api/study-readiness` is read-only and excludes all local evidence in public mode. See [REAL-DATA-FEASIBILITY.md](REAL-DATA-FEASIBILITY.md) for exact limits and interpretation.
+
+
+## Independent local bike-demand benchmark
+
+[BIKE-BENCHMARK.md](BIKE-BENCHMARK.md) defines a separate real-data study, using UCI Seoul Bike Sharing Demand under CC BY 4.0 with retained attribution and declared modifications. Its 24-hour horizon, training-derived demand label and results do not alter the blocked KEV study or validate its predictions. Original `TrainingConfig` remains synthetic-only. The benchmark fits only through an explicit offline CLI and serves saved JSON through `/api/bikes`; the public profile returns unavailable before reading any bike source/artifact. No raw dataset or learned weights are included in Git or the public image.
+
+Run `python -m signalrank.bikes --fetch`, then `python -m signalrank.bikes --run` in the existing environment. Source and report artifacts live under local application storage (`~/.local/share/signalrank/bikes`), capped at 20 MiB. Repeating the same run reuses its validated report. `#bikes` shows the results and `/api/bikes/export` exports an attributed Markdown report. `SIGNALRANK_BIKE_ROOT` can select an operator-controlled artifact root for serving; no browser-supplied path, upload, fitting or acquisition endpoint exists.

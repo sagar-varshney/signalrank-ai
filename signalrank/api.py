@@ -14,6 +14,7 @@ from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sampl
 from signalrank.contracts import fixture_report
 from signalrank.scope import review as scope_review
 from signalrank.study import audit as study_audit
+from signalrank.bikes import load_report as load_bike_report, markdown as bike_markdown
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
@@ -131,6 +132,20 @@ def storage_report():
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise HTTPException(409, "Storage inventory could not be read safely") from error
     return {"status": "available", **{key: value for key, value in result.items() if key != "plan"}}
+
+
+@app.get("/api/bikes")
+def bike_report():
+    return load_bike_report(os.environ.get("SIGNALRANK_BIKE_ROOT"), public=app.state.settings.public)
+
+
+@app.get("/api/bikes/export")
+def bike_export():
+    result = bike_report()
+    if result["status"] != "available":
+        raise HTTPException(409, result["reason"])
+    return Response(bike_markdown(result), media_type="text/markdown",
+                    headers={"Content-Disposition": 'attachment; filename="signalrank-bike-benchmark.md"'})
 
 
 @app.get("/api/report")
@@ -322,7 +337,9 @@ def sources():
 
 @app.get("/api/scope")
 def scope_report():
-    return scope_review(public=app.state.settings.public)
+    result = scope_review(public=app.state.settings.public)
+    result["training_scope"] = "Original synthetic/KEV pipeline. The independent local bike-demand benchmark has its own protocol and attribution."
+    return result
 
 
 @app.get("/api/study-readiness")
