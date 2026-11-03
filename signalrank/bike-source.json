@@ -1,0 +1,15 @@
+{
+  "id": "uci-seoul-560",
+  "title": "Seoul Bike Sharing Demand",
+  "dataset_url": "https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand",
+  "download_url": "https://archive.ics.uci.edu/static/public/560/seoul%2Bbike%2Bsharing%2Bdemand.zip",
+  "doi": "https://doi.org/10.24432/C5F62R",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "legal_code_url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+  "reviewed_on": "2026-11-03",
+  "scope": "Separate local citywide-demand benchmark; no KEV training approval or public deployment expansion",
+  "csv_sha256": "373339b71a8935d69e9af0abf26a70744632119862eeb3919efb389a7b749c60",
+  "zip_sha256": "139e9908f0a3544bb222386855c9ce107e96467306bb8e4ce936aab59e7baac4",
+  "csv_name": "SeoulBikeData.csv"
+}

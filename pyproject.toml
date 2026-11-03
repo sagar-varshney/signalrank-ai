@@ -16,4 +16,4 @@ test = ["httpx>=0.27,<1"]
 packages = ["signalrank"]
 
 [tool.setuptools.package-data]
-signalrank = ["static/*.html", "static/*.css", "static/*.js", "static/react/*.js", "static/react/*.css", "static/react/*.txt", "*.json"]
+signalrank = ["static/*.html", "static/*.css", "static/*.js", "static/react/*.js", "static/react/*.css", "static/react/*.txt", "*.json", "BIKE-NOTICE.txt"]

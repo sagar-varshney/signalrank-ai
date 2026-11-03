@@ -1,0 +1,26 @@
+{
+  "id": "seoul-next-day-demand-v1",
+  "source": "uci-seoul-560",
+  "timezone": "UTC+09:00",
+  "forecast_rule": "At the end of hour t, rank demand in hour t+24; its count is assumed available 24 hours after the forecast cutoff.",
+  "horizon_hours": 24,
+  "high_demand_quantile": 0.8,
+  "quantile_method": "higher",
+  "label_rule": "Target count >= the training target-count 80th percentile. No threshold selection on calibration, development or final outcomes.",
+  "lookback_hours": 168,
+  "boundaries": {"calibration": "2018-07-01T00:00:00+09:00", "development": "2018-08-01T00:00:00+09:00", "final": "2018-10-01T00:00:00+09:00"},
+  "purge_rule": "Every training/calibration/development target must finish strictly before the next partition begins.",
+  "primary": "logistic",
+  "models": {
+    "logistic": {"C": 1.0, "max_iter": 1000, "random_state": 42},
+    "boosted": {"max_iter": 100, "learning_rate": 0.05, "max_leaf_nodes": 15, "min_samples_leaf": 20, "l2_regularization": 1.0, "early_stopping": false, "random_state": 42}
+  },
+  "calibration": {"method": "sigmoid on base-model log-odds", "C": 1.0, "max_iter": 1000},
+  "baselines": ["latest completed hour count", "target hour last week", "training prevalence"],
+  "review_fraction": 0.1,
+  "review_scope": "Top 10% across each entire historical evaluation partition; not a real-time operational review policy.",
+  "selection": "All contracted hours; no outcome-based sampling, candidate winner selection, tuning or final-period refitting.",
+  "final_rule": "Primary model and comparison family are fixed before the first final evaluation. Later revisions must identify this final interval as explored.",
+  "limits": {"download_bytes": 2097152, "csv_bytes": 2097152, "report_bytes": 2097152, "local_storage_bytes": 20971520, "cpu_seconds": 120},
+  "limitations": ["One historical city-year; not evidence of performance in other cities or future years.", "Hourly values are assumed available after hour completion; original publication latency and revision vintages are not audited.", "Future weather, future functioning status and future counts are excluded from features.", "High demand is a training-derived benchmark label, not measured shortages or a service-capacity threshold.", "No operational benefit, causal effect or vulnerability-prediction validity is established."]
+}

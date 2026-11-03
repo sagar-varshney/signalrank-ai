@@ -1,0 +1,12 @@
+Seoul Bike Sharing Demand [Dataset]. (2020). UCI Machine Learning Repository.
+DOI: https://doi.org/10.24432/C5F62R
+Source: https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Legal code: https://creativecommons.org/licenses/by/4.0/legalcode.en
+
+SignalRank modifications: date/hour validation, past-only lag/rolling/calendar
+features, training-derived high-demand labels, chronological maturity purges,
+fitted models, separate probability calibration and aggregate evaluation.
+No endorsement by the dataset contributors, UCI or Creative Commons is implied.
+No source logos or linked third-party materials are included.
