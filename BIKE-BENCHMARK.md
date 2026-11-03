@@ -27,3 +27,5 @@ The explicit CLI acquires the official dataset only, with a 2 MiB download limit
 Dataset publication counts, archive/schema validation and source pinning may be inspected before fitting. Model metrics and final outcome support must not drive changes to this protocol. Any later experiment must retain this first report and disclose that the final interval has already been evaluated.
 
 Stable ties follow chronological source order. For the constant-prevalence baseline, review-budget captures therefore select the earliest hours and are not a random-selection estimate. CPU limits are checked between bounded fits; they are not operating-system preemption.
+
+The [first fixed evaluation](research/seoul-benchmark-first-results-2026-11-03.md) records all candidates, support, provenance and limitations. No model winner was selected after evaluation.
