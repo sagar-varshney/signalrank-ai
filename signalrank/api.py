@@ -15,6 +15,7 @@ from signalrank.contracts import fixture_report
 from signalrank.scope import review as scope_review
 from signalrank.study import audit as study_audit
 from signalrank.bikes import load_report as load_bike_report, markdown as bike_markdown
+from signalrank.bike_audit import load as load_bike_audit
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
@@ -137,6 +138,11 @@ def storage_report():
 @app.get("/api/bikes")
 def bike_report():
     return load_bike_report(os.environ.get("SIGNALRANK_BIKE_ROOT"), public=app.state.settings.public)
+
+
+@app.get("/api/bikes/audit")
+def bike_audit():
+    return load_bike_audit(os.environ.get("SIGNALRANK_BIKE_ROOT"), public=app.state.settings.public)
 
 
 @app.get("/api/bikes/export")

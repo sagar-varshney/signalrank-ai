@@ -12,7 +12,7 @@ const report:BikeReport={status:'available',warning:'Original fictional test evi
 function mount(hash='bikes'){location.hash=hash;render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><Bikes/></QueryClientProvider>);}
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 it('keeps the primary fixed even when another candidate has higher AP',async()=>{
-  vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,json:async()=>report})));
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>({ok:true,json:async()=>String(input).includes('/audit')?{status:'unavailable',reason:'Audit not saved.'}:report})));
   mount();await screen.findByText('Which hours will be busy tomorrow?');
   expect(screen.getByText('-0.050')).toBeTruthy();
   expect(screen.getByText('Prespecified primary')).toBeTruthy();
@@ -21,10 +21,10 @@ it('keeps the primary fixed even when another candidate has higher AP',async()=>
   fireEvent.change(screen.getByLabelText('Displayed probability model'),{target:{value:'boosted'}});
   expect(screen.getByRole('img',{name:'Daily high-demand frequency and mean forecast probability'})).toBeTruthy();
   expect(screen.getByRole('link',{name:'Export benchmark report'}).getAttribute('href')).toBe('/api/bikes/export');
-  expect(vi.mocked(fetch).mock.calls).toHaveLength(1);
+  expect(vi.mocked(fetch).mock.calls).toHaveLength(2);
 });
 it('does not fetch inactive workspaces and supports an explicit error retry',async()=>{
-  const f=vi.fn().mockResolvedValueOnce({ok:false,status:500}).mockResolvedValue({ok:true,json:async()=>report});vi.stubGlobal('fetch',f);
+  let benchmarkCalls=0;const f=vi.fn(async(input:RequestInfo|URL)=>{if(String(input).includes('/audit'))return {ok:true,json:async()=>({status:'unavailable',reason:'Audit not saved.'})};benchmarkCalls++;return benchmarkCalls===1?{ok:false,status:500}:{ok:true,json:async()=>report};});vi.stubGlobal('fetch',f);
   mount('overview');await waitFor(()=>expect(f).not.toHaveBeenCalled());
   location.hash='bikes';window.dispatchEvent(new Event('signalrank:view'));
   await screen.findByRole('alert');fireEvent.click(screen.getByRole('button',{name:'Retry benchmark'}));
@@ -35,4 +35,13 @@ it('shows unavailable evidence without inventing real results or triggering trai
   mount();await screen.findByText('No saved bike benchmark loaded.');
   expect(screen.queryByText('Average precision')).toBeNull();
   expect(screen.queryByRole('button',{name:/train|fetch|download/i})).toBeNull();
+});
+it('shows the separate exploratory audit and its one global budget',async()=>{
+  const evidence={status:'available',warning:'Final outcomes already examined; exploratory only.',selection:'One global budget.',display_gate:'Support guard.',recent_demand_cutoff:224.17,global_budget:145,global_captured:118,slices:[{dimension:'Target-hour week',group:'Weekend',count:384,positives:86,prevalence:86/384,mean_probability:.24,global_selected:37,global_captured:29,global_recall:29/86,logistic_ap:.604,weekly_ap:.629,logistic_brier:.16,display_warning:null}]};
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>({ok:true,json:async()=>String(input).includes('/audit')?evidence:report})));
+  mount();await screen.findByText('Where does the fixed model struggle?');
+  expect(await screen.findByText('Weekend')).toBeTruthy();
+  expect(screen.getByText('Final outcomes already examined; exploratory only.')).toBeTruthy();
+  expect(screen.getByRole('region',{name:'Exploratory bike demand subgroup diagnostics, scroll horizontally if needed'})).toBeTruthy();
+  expect(screen.getByText('145')).toBeTruthy();
 });

@@ -85,5 +85,8 @@ test('public profile keeps the independent real benchmark local-only',async({pag
   const result=await(await page.request.get('/api/bikes')).json();
   expect(result.status).toBe('unavailable');
   expect(JSON.stringify(result)).not.toContain('/Users/');
+  const audit=await(await page.request.get('/api/bikes/audit')).json();
+  expect(audit.status).toBe('unavailable');
+  expect(JSON.stringify(audit)).not.toContain('/Users/');
   expect((await page.request.get('/api/bikes/export')).status()).toBe(409);
 });

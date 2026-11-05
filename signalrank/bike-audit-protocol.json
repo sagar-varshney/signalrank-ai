@@ -1,0 +1,11 @@
+{
+  "id": "seoul-next-day-demand-exploratory-audit-v1",
+  "status": "exploratory_after_first_final_evaluation",
+  "parent_protocol": "seoul-next-day-demand-v1",
+  "population": "All final-partition hours from the first fixed benchmark; no outcome-based exclusions.",
+  "models": "Refit only the original fixed logistic configuration and its July sigmoid calibration. Compare with the original weekly count ranking. No new model or tuning.",
+  "dimensions": ["target-hour daypart: 00-05, 06-11, 12-17, 18-23", "target-hour weekday versus weekend", "training-derived low versus other recent demand: mean of 24 completed hours <= training-input 25th percentile, higher method"],
+  "selection": "The original logistic top-10% final-partition budget is applied once globally; subgroup captures are intersections with that selection, not separate budgets.",
+  "display_gate": "Within-group AP and Brier require >=30 hours, >=5 positives and >=5 negatives. This is a reporting guard, not statistical adequacy.",
+  "claim_boundary": "Final outcomes were already examined. All subgroup differences are descriptive exploratory diagnostics, not fresh validation, model selection or significance tests."
+}

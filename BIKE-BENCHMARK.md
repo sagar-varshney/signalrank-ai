@@ -29,3 +29,9 @@ Dataset publication counts, archive/schema validation and source pinning may be 
 Stable ties follow chronological source order. For the constant-prevalence baseline, review-budget captures therefore select the earliest hours and are not a random-selection estimate. CPU limits are checked between bounded fits; they are not operating-system preemption.
 
 The [first fixed evaluation](research/seoul-benchmark-first-results-2026-11-03.md) records all candidates, support, provenance and limitations. No model winner was selected after evaluation.
+
+## Exploratory subgroup audit after the first evaluation
+
+`python -m signalrank.bike_audit --run` uses the already pinned local CSV and valid first report. It repeats only the original fixed logistic fit and July sigmoid calibration, checks that its full-final AP, Brier, weekly baseline AP and global captured count exactly reproduce the saved report, and writes a separate small report. `#bikes` and `/api/bikes/audit` read that report without fitting. The public profile returns unavailable before reading local data. The audit is local and free; it does not acquire another source.
+
+The [audit protocol](signalrank/bike-audit-protocol.json) defines time-of-day, weekday/weekend and training-derived low recent demand cohorts. Each dimension partitions the same final hours. Captures are intersections with the **one original global** top-10% budget. Within-group AP/Brier have a support display gate; a group with no positives has no AP shown. Groups overlap between dimensions, and within-group AP depends partly on group prevalence. This analysis was designed **after** the final interval was examined, so every subgroup finding is exploratory. It must not be presented as a new validation set, an operational policy, or a basis for claiming statistical significance.
