@@ -110,7 +110,7 @@ describe('shipped appearance and navigation', () => {
     (window.document.querySelector('.hero-actions [data-view="studio"]') as HTMLButtonElement).click();
     expect(window.location.hash).toBe('#studio');
     expect(fetch.mock.calls.every(([path]) => !path.startsWith('/api/batches'))).toBe(true);
-    expect(window.document.querySelector('.workflow-map desc')!.textContent).toContain('not live execution activity');
+    expect(window.document.querySelector('.overview-scope-note')!.textContent).toContain('not estimates of real-world exploitation risk');
   });
 });
 
