@@ -40,7 +40,8 @@ test('Overview is the landing page and sharp corners persist across themes and w
   await expect(page.getByRole('heading', { name: 'Know your model. Beyond the score.', level: 1 })).toBeVisible();
   await expect(page.getByRole('navigation').locator('[data-view]').first()).toHaveAttribute('data-view', 'overview');
   await expect(page.getByRole('region', { name: 'Guided synthetic showcase' })).toHaveCount(0);
-  await expect(page.locator('#overview-metrics .metric')).toHaveCount(3);
+  await expect(page.locator('#overview-metrics .metric')).toHaveCount(4);
+  await expect(page.locator('#breadcrumb-current')).toHaveText('Overview');
   for (const theme of ['light', 'dark', 'system']) {
     await page.getByRole('combobox', { name: 'Appearance' }).selectOption(theme);
     for (const selector of ['#overview .notice', '#overview .metric', '#overview .panel', '.theme-control select', '.command-trigger']) {
