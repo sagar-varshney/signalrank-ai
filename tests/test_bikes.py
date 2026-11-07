@@ -145,6 +145,7 @@ class BikeTests(unittest.TestCase):
             with patch.dict("os.environ",env),TestClient(app) as client,patch("signalrank.bikes.evaluate",side_effect=AssertionError("no fitting")),patch("signalrank.bikes.acquire",side_effect=AssertionError("no download")):
                 self.assertEqual(client.get("/api/bikes").json()["status"],"unavailable")
                 self.assertEqual(client.get("/api/bikes/audit").json()["status"],"unavailable")
+                self.assertEqual(client.get("/api/bikes/external").json()["status"],"unavailable")
                 self.assertEqual(client.get("/api/bikes/export").status_code,409)
                 self.assertEqual(client.post("/api/bikes").status_code,405)
                 self.assertFalse((root/"bikes").exists())

@@ -15955,6 +15955,10 @@ function Bn() {
 		queryKey: ["bikes-audit"],
 		queryFn: ({ signal: e }) => k("/api/bikes/audit", e),
 		enabled: t
+	}), l = O({
+		queryKey: ["bikes-external"],
+		queryFn: ({ signal: e }) => k("/api/bikes/external", e),
+		enabled: t
 	});
 	if (!t) return null;
 	if (s.error) return /* @__PURE__ */ (0, b.jsxs)("div", {
@@ -15970,12 +15974,12 @@ function Bn() {
 		role: "status",
 		children: "Loading the saved real-data benchmark…"
 	});
-	let l = s.data;
-	if (l.status !== "available" || !l.comparisons || !l.partitions) return /* @__PURE__ */ (0, b.jsxs)("article", {
+	let u = s.data;
+	if (u.status !== "available" || !u.comparisons || !u.partitions) return /* @__PURE__ */ (0, b.jsxs)("article", {
 		className: "panel",
 		children: [
 			/* @__PURE__ */ (0, b.jsx)("h2", { children: "No saved bike benchmark loaded." }),
-			/* @__PURE__ */ (0, b.jsx)("p", { children: l.reason }),
+			/* @__PURE__ */ (0, b.jsx)("p", { children: u.reason }),
 			/* @__PURE__ */ (0, b.jsxs)("p", { children: [
 				"Source: ",
 				/* @__PURE__ */ (0, b.jsx)("a", {
@@ -15986,7 +15990,7 @@ function Bn() {
 			] })
 		]
 	});
-	let u = l.comparisons[r], d = u.find((e) => e.id === "logistic"), f = u.find((e) => e.id === a), p = u.find((e) => e.id === "weekly"), m = l.calibration?.[a] ?? [], h = l.timeline ?? [];
+	let d = u.comparisons[r], f = d.find((e) => e.id === "logistic"), p = d.find((e) => e.id === a), m = d.find((e) => e.id === "weekly"), h = u.calibration?.[a] ?? [], g = u.timeline ?? [];
 	return /* @__PURE__ */ (0, b.jsxs)("div", {
 		className: "lab-workspace bikes-workspace",
 		children: [
@@ -16004,11 +16008,11 @@ function Bn() {
 						children: [
 							/* @__PURE__ */ (0, b.jsx)("span", {
 								className: "badge",
-								children: l.fixture ? "Original test fixture" : "UCI · Seoul · 2017–2018"
+								children: u.fixture ? "Original test fixture" : "UCI · Seoul · 2017–2018"
 							}),
 							/* @__PURE__ */ (0, b.jsx)("span", {
 								className: "badge",
-								children: l.source?.license
+								children: u.source?.license
 							}),
 							/* @__PURE__ */ (0, b.jsx)("span", {
 								className: "badge",
@@ -16020,14 +16024,14 @@ function Bn() {
 					className: "bike-threshold",
 					children: [
 						/* @__PURE__ */ (0, b.jsx)("span", { children: "High-demand threshold" }),
-						/* @__PURE__ */ (0, b.jsx)("strong", { children: l.threshold?.toLocaleString() }),
+						/* @__PURE__ */ (0, b.jsx)("strong", { children: u.threshold?.toLocaleString() }),
 						/* @__PURE__ */ (0, b.jsx)("span", { children: "rentals / hour · derived from training targets" })
 					]
 				})]
 			}),
 			/* @__PURE__ */ (0, b.jsx)("p", {
 				className: "notice subtle",
-				children: l.warning
+				children: u.warning
 			}),
 			/* @__PURE__ */ (0, b.jsxs)("div", {
 				className: "bike-toolbar",
@@ -16072,18 +16076,18 @@ function Bn() {
 				children: [
 					[
 						"Average precision",
-						Rn(f.average_precision),
-						`Same-hour weekly baseline ${Rn(p.average_precision)}`
+						Rn(p.average_precision),
+						`Same-hour weekly baseline ${Rn(m.average_precision)}`
 					],
 					[
 						"Brier score",
-						Rn(f.brier_score),
+						Rn(p.brier_score),
 						"Probability error · lower is better"
 					],
 					[
 						"Positives captured",
-						`${f.captured} / ${f.positives}`,
-						`${f.budget} highest-ranked hours · ${zn(f.recall)} recall`
+						`${p.captured} / ${p.positives}`,
+						`${p.budget} highest-ranked hours · ${zn(p.recall)} recall`
 					]
 				].map(([e, t, n]) => /* @__PURE__ */ (0, b.jsxs)("div", {
 					className: "metric",
@@ -16111,9 +16115,9 @@ function Bn() {
 						children: [/* @__PURE__ */ (0, b.jsx)("h2", { children: "Does ML improve the ranking?" }), /* @__PURE__ */ (0, b.jsxs)("span", {
 							className: "caption",
 							children: [
-								f.count,
+								p.count,
 								" hours · ",
-								zn(f.prevalence),
+								zn(p.prevalence),
 								" positive · ",
 								r
 							]
@@ -16127,7 +16131,7 @@ function Bn() {
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Brier ↓" }),
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Precision · top 10%" }),
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Recall · top 10%" })
-						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: u.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", {
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: d.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", {
 							className: e.id === a ? "selected-row" : "",
 							children: [
 								/* @__PURE__ */ (0, b.jsxs)("td", { children: [e.name, e.id === "logistic" && /* @__PURE__ */ (0, b.jsx)("span", {
@@ -16149,7 +16153,7 @@ function Bn() {
 						className: "bike-delta",
 						children: [
 							"Primary-model AP minus weekly baseline: ",
-							/* @__PURE__ */ (0, b.jsxs)("strong", { children: [d.average_precision - p.average_precision >= 0 ? "+" : "", Rn(d.average_precision - p.average_precision)] }),
+							/* @__PURE__ */ (0, b.jsxs)("strong", { children: [f.average_precision - m.average_precision >= 0 ? "+" : "", Rn(f.average_precision - m.average_precision)] }),
 							". Descriptive difference, not a significance test."
 						]
 					})
@@ -16166,15 +16170,15 @@ function Bn() {
 						}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Track probabilities against observed frequency." })] })
 					}),
 					/* @__PURE__ */ (0, b.jsx)(Dn, {
-						labels: h.map((e) => e.day),
+						labels: g.map((e) => e.day),
 						series: [{
 							name: "Observed high-demand fraction",
-							values: h.map((e) => e.observed_fraction),
+							values: g.map((e) => e.observed_fraction),
 							color: "var(--muted)",
 							dashed: !0
 						}, {
 							name: "Mean calibrated probability",
-							values: h.map((e) => e[a]),
+							values: g.map((e) => e[a]),
 							color: "var(--accent)"
 						}],
 						title: "Daily high-demand frequency and mean forecast probability",
@@ -16191,7 +16195,7 @@ function Bn() {
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Hours" }),
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Observed high-demand fraction" }),
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Mean probability" })
-						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: h.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: g.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
 							/* @__PURE__ */ (0, b.jsx)("td", { children: e.day }),
 							/* @__PURE__ */ (0, b.jsx)("td", { children: e.hours }),
 							/* @__PURE__ */ (0, b.jsx)("td", { children: zn(e.observed_fraction) }),
@@ -16218,7 +16222,7 @@ function Bn() {
 								"development",
 								"final"
 							].map((e) => {
-								let t = l.partitions[e];
+								let t = u.partitions[e];
 								return /* @__PURE__ */ (0, b.jsxs)("div", { children: [
 									/* @__PURE__ */ (0, b.jsxs)("dt", { children: [
 										e,
@@ -16239,7 +16243,7 @@ function Bn() {
 						}),
 						/* @__PURE__ */ (0, b.jsxs)("p", {
 							className: "caption",
-							children: [l.purged, " origins purged at partition boundaries. Targets must finish strictly before the next interval begins. Features use only completed counts and known calendar cycles; future weather and functioning status are excluded."]
+							children: [u.purged, " origins purged at partition boundaries. Targets must finish strictly before the next interval begins. Features use only completed counts and known calendar cycles; future weather and functioning status are excluded."]
 						})
 					]
 				}), /* @__PURE__ */ (0, b.jsxs)("article", {
@@ -16257,7 +16261,7 @@ function Bn() {
 								/* @__PURE__ */ (0, b.jsx)("th", { children: "Hours" }),
 								/* @__PURE__ */ (0, b.jsx)("th", { children: "Mean predicted" }),
 								/* @__PURE__ */ (0, b.jsx)("th", { children: "Observed" })
-							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: m.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: h.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
 								/* @__PURE__ */ (0, b.jsxs)("td", { children: [
 									zn(e.lower),
 									"–",
@@ -16293,7 +16297,7 @@ function Bn() {
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Actual rentals" }),
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Probability" }),
 							/* @__PURE__ */ (0, b.jsx)("th", { children: "Inspect the score" })
-						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: l.errors?.map((e, t) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+						] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: u.errors?.map((e, t) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
 							/* @__PURE__ */ (0, b.jsxs)("td", { children: [e.kind, /* @__PURE__ */ (0, b.jsx)("span", {
 								className: "caption",
 								children: e.at
@@ -16338,7 +16342,7 @@ function Bn() {
 								/* @__PURE__ */ (0, b.jsx)("th", { children: "Hours / positives" }),
 								/* @__PURE__ */ (0, b.jsx)("th", { children: "AP" }),
 								/* @__PURE__ */ (0, b.jsx)("th", { children: "Brier" })
-							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: l.slices?.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: u.slices?.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
 								/* @__PURE__ */ (0, b.jsx)("td", { children: e.month }),
 								/* @__PURE__ */ (0, b.jsxs)("td", { children: [
 									e.count,
@@ -16452,52 +16456,164 @@ function Bn() {
 				})]
 			}),
 			/* @__PURE__ */ (0, b.jsxs)("article", {
+				className: "panel bike-external",
+				children: [/* @__PURE__ */ (0, b.jsxs)("div", {
+					className: "panel-head",
+					children: [/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("p", {
+						className: "overline",
+						children: "2019 / INDEPENDENT SOURCE GATE"
+					}), /* @__PURE__ */ (0, b.jsx)("h2", { children: "Can later data validate this model?" })] }), /* @__PURE__ */ (0, b.jsx)("span", {
+						className: "badge",
+						children: l.data?.gate === "blocked" ? "Evaluation blocked" : "Source check"
+					})]
+				}), l.error ? /* @__PURE__ */ (0, b.jsxs)("div", {
+					role: "alert",
+					children: [/* @__PURE__ */ (0, b.jsx)("p", { children: "Could not read the local 2019 source audit." }), /* @__PURE__ */ (0, b.jsx)("button", {
+						className: "button",
+						onClick: () => void l.refetch(),
+						children: "Retry source audit"
+					})]
+				}) : l.data ? l.data.status === "available" ? /* @__PURE__ */ (0, b.jsxs)(b.Fragment, { children: [
+					/* @__PURE__ */ (0, b.jsx)("p", { children: l.data.warning }),
+					/* @__PURE__ */ (0, b.jsxs)("div", {
+						className: "bike-gate-stats",
+						children: [
+							/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("span", { children: "Hourly source records" }), /* @__PURE__ */ (0, b.jsx)("strong", { children: l.data.hourly?.raw_rows.toLocaleString() })] }),
+							/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("span", { children: "Missing 2019 hours" }), /* @__PURE__ */ (0, b.jsx)("strong", { children: (l.data.hourly?.expected_hours ?? 0) - (l.data.hourly?.observed_hours ?? 0) })] }),
+							/* @__PURE__ */ (0, b.jsxs)("div", { children: [/* @__PURE__ */ (0, b.jsx)("span", { children: "Daily totals disagreeing" }), /* @__PURE__ */ (0, b.jsxs)("strong", { children: [
+								l.data.daily?.mismatched_dates,
+								" / ",
+								l.data.daily?.comparable_dates
+							] })] })
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsx)("ul", {
+						className: "bike-gate-reasons",
+						children: l.data.reasons?.map((e) => /* @__PURE__ */ (0, b.jsx)("li", { children: e }, e))
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("details", { children: [
+						/* @__PURE__ */ (0, b.jsx)("summary", { children: "Inspect missing periods and count mismatches" }),
+						/* @__PURE__ */ (0, b.jsxs)("p", {
+							className: "caption",
+							children: [
+								"Published daily dates: ",
+								l.data.daily?.published_dates,
+								" / 365. Unpublished dates: ",
+								l.data.daily?.missing_dates.join(", ") || "none",
+								"."
+							]
+						}),
+						/* @__PURE__ */ (0, b.jsx)(A, {
+							label: "Missing official hourly periods",
+							children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "First missing hour" }),
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Last missing hour" }),
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Hours" })
+							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: l.data.hourly?.missing_hour_spans.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+								/* @__PURE__ */ (0, b.jsx)("td", { children: e.first }),
+								/* @__PURE__ */ (0, b.jsx)("td", { children: e.last }),
+								/* @__PURE__ */ (0, b.jsx)("td", { children: e.hours })
+							] }, e.first)) })] })
+						}),
+						/* @__PURE__ */ (0, b.jsx)(A, {
+							label: "Examples of nonreconciling published totals",
+							children: /* @__PURE__ */ (0, b.jsxs)("table", { children: [/* @__PURE__ */ (0, b.jsx)("thead", { children: /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Day" }),
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Hourly use total" }),
+								/* @__PURE__ */ (0, b.jsx)("th", { children: "Daily rental total" })
+							] }) }), /* @__PURE__ */ (0, b.jsx)("tbody", { children: l.data.daily?.mismatch_examples.map((e) => /* @__PURE__ */ (0, b.jsxs)("tr", { children: [
+								/* @__PURE__ */ (0, b.jsx)("td", { children: e.day }),
+								/* @__PURE__ */ (0, b.jsx)("td", { children: e.hourly_use_total.toLocaleString() }),
+								/* @__PURE__ */ (0, b.jsx)("td", { children: e.daily_rental_total.toLocaleString() })
+							] }, e.day)) })] })
+						}),
+						/* @__PURE__ */ (0, b.jsx)("p", {
+							className: "caption",
+							children: "No gap was filled, date excluded from a model score, or target relabeled to make the sources agree."
+						})
+					] }),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption",
+						children: [
+							"Source: ",
+							/* @__PURE__ */ (0, b.jsx)("a", {
+								href: l.data.source?.catalog_url,
+								children: "Seoul hourly catalog ↗"
+							}),
+							" · ",
+							/* @__PURE__ */ (0, b.jsx)("a", {
+								href: l.data.source?.daily_catalog_url,
+								children: "Seoul daily-count catalog ↗"
+							}),
+							" · ",
+							/* @__PURE__ */ (0, b.jsx)("a", {
+								href: l.data.source?.license_url,
+								children: l.data.source?.license
+							}),
+							". ",
+							l.data.source?.modifications,
+							" No government endorsement is implied."
+						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("details", { children: [/* @__PURE__ */ (0, b.jsx)("summary", { children: "Source-audit fingerprint" }), /* @__PURE__ */ (0, b.jsx)("p", {
+						className: "replay-fingerprint",
+						children: l.data.report_sha256
+					})] })
+				] }) : /* @__PURE__ */ (0, b.jsx)("p", {
+					className: "caption",
+					children: l.data.reason
+				}) : /* @__PURE__ */ (0, b.jsx)("p", {
+					role: "status",
+					children: "Loading the source audit…"
+				})]
+			}),
+			/* @__PURE__ */ (0, b.jsxs)("article", {
 				className: "panel",
 				children: [
 					/* @__PURE__ */ (0, b.jsx)("h2", { children: "Source, reproducibility and limits." }),
 					/* @__PURE__ */ (0, b.jsxs)("p", { children: [
 						/* @__PURE__ */ (0, b.jsxs)("a", {
-							href: l.source?.dataset_url,
-							children: [l.source?.title, " ↗"]
+							href: u.source?.dataset_url,
+							children: [u.source?.title, " ↗"]
 						}),
 						" · ",
 						/* @__PURE__ */ (0, b.jsx)("a", {
-							href: l.source?.doi,
+							href: u.source?.doi,
 							children: "Dataset DOI"
 						}),
 						" · ",
 						/* @__PURE__ */ (0, b.jsx)("a", {
-							href: l.source?.license_url,
+							href: u.source?.license_url,
 							children: "CC BY 4.0"
 						})
 					] }),
 					/* @__PURE__ */ (0, b.jsx)("pre", {
 						className: "bike-attribution",
-						children: l.attribution
+						children: u.attribution
 					}),
 					/* @__PURE__ */ (0, b.jsxs)("p", {
 						className: "caption",
 						children: [
 							"Local CPU time ",
-							l.cpu_seconds?.toFixed(2),
+							u.cpu_seconds?.toFixed(2),
 							" seconds. No GPU, paid API, pretrained weights or request-time fitting."
 						]
 					}),
-					/* @__PURE__ */ (0, b.jsx)("ul", { children: l.limitations?.map((e) => /* @__PURE__ */ (0, b.jsx)("li", { children: e }, e)) }),
+					/* @__PURE__ */ (0, b.jsx)("ul", { children: u.limitations?.map((e) => /* @__PURE__ */ (0, b.jsx)("li", { children: e }, e)) }),
 					/* @__PURE__ */ (0, b.jsxs)("details", { children: [
 						/* @__PURE__ */ (0, b.jsx)("summary", { children: "Fingerprints and runtime" }),
 						/* @__PURE__ */ (0, b.jsxs)("p", {
 							className: "replay-fingerprint",
-							children: ["Dataset ", l.dataset_sha256]
+							children: ["Dataset ", u.dataset_sha256]
 						}),
 						/* @__PURE__ */ (0, b.jsxs)("p", {
 							className: "replay-fingerprint",
-							children: ["Report ", l.report_sha256]
+							children: ["Report ", u.report_sha256]
 						}),
-						/* @__PURE__ */ (0, b.jsx)("p", { children: Object.entries(l.runtime ?? {}).map(([e, t]) => e + " " + t).join(" · ") }),
+						/* @__PURE__ */ (0, b.jsx)("p", { children: Object.entries(u.runtime ?? {}).map(([e, t]) => e + " " + t).join(" · ") }),
 						/* @__PURE__ */ (0, b.jsxs)("p", { children: [
 							"Protocol ",
-							l.protocol,
+							u.protocol,
 							". Checksums detect changes, not authenticity. The original synthetic and KEV research scopes are separate."
 						] })
 					] })

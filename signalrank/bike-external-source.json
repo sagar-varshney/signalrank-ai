@@ -1,0 +1,18 @@
+{
+  "id": "seoul-open-data-oa-15245-2019",
+  "catalog_url": "https://data.seoul.go.kr/dataList/OA-15245/F/1/datasetView.do",
+  "publisher": "Seoul Metropolitan Government",
+  "license": "KOGL Type 1: attribution",
+  "license_url": "https://www.kogl.or.kr/recommend/recommendList.do",
+  "archive_bytes": 341210886,
+  "archive_sha256": "21ca63ef13fb52a9537b70c20d74f0607c15de39eb4170aee05e8d4d4d2d7c31",
+  "daily_catalog_url": "https://data.seoul.go.kr/dataList/OA-14994/F/1/datasetView.do",
+  "daily_files": {
+    "8": {"kind": "csv", "bytes": 8120, "sha256": "387a856d01378335e541cfaed5f3e00c9511fb01532b167b76f5f0fcabb44a92"},
+    "9": {"kind": "xlsx", "bytes": 10169, "sha256": "4701d6849d018e4a96521a1b42a7d932e1de9d45d7b9d1be8e838c9665f78a53"},
+    "10": {"kind": "xlsx", "bytes": 12653, "sha256": "3ace3042a0a9e96e14690d5170079a606dfc1859fb7c50b313bd0bd83d36637b"},
+    "19": {"kind": "xlsx", "bytes": 12770, "sha256": "ffa48068fc523a6cee8fef190703e618a0379fa1e51c878778cc8e27b8174b31", "catalog_extension": "csv", "actual_format": "xlsx"}
+  },
+  "reviewed_on": "2026-11-07",
+  "modifications": "SignalRank validates mixed-encoding monthly CSVs, sums published hourly use counts citywide, and compares complete dates with separately published daily rental counts. No model is fitted or scored when this gate is blocked."
+}
