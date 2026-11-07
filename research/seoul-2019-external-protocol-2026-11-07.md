@@ -8,6 +8,8 @@ The [Seoul Open Data Plaza hourly public bicycle usage catalog](https://data.seo
 
 A 16-byte request to the official download endpoint confirmed a ZIP and a `Content-Length` of 341,210,886 bytes. No archive contents or 2019 outcomes have yet been read. The server did not honor a small HTTP range request, so schema and coverage inspection requires a bounded full download. The archive will be temporary on local non-iCloud storage; only a small aggregate and integrity receipt may persist. No paid service, API key, customer identifier, demographic feature, raw-file commit or public release is planned.
 
+The [official daily-count catalog](https://data.seoul.go.kr/dataList/OA-14994/F/1/datasetView.do) supplies four small files that together cover 2019. Before scoring, each derived hourly day must match its independent published daily total; inaccessible or ambiguous files block the evaluation. This strengthens the semantic gate and uses at most four additional bounded requests.
+
 The catalog also has tiny **daily** rental-count files. They cannot directly validate an **hourly** next-day model; presenting their results as the same task would change the target. The 2019 hourly archive remains subject to a semantic gate: we must show how each row maps to rental events or counts, check all 8,760 local hours and reject ambiguous or incomplete data before reporting performance. The source describes rental activity, but the schema has not yet been inspected.
 
 ## Fixed evaluation
