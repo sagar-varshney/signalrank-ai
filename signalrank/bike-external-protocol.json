@@ -1,0 +1,27 @@
+{
+  "id": "seoul-2019-independent-source-v1",
+  "status": "predeclared_before_source_acquisition_and_outcome_evaluation",
+  "original_protocol": "seoul-next-day-demand-v1",
+  "original_source": "uci-seoul-560",
+  "external_source": {
+    "id": "seoul-open-data-oa-15245-2019",
+    "catalog_url": "https://data.seoul.go.kr/dataList/OA-15245/F/1/datasetView.do",
+    "publisher": "Seoul Metropolitan Government",
+    "archive_name": "Seoul public bicycle hourly usage information, 2019 ZIP",
+    "catalog_file_number": 57,
+    "catalog_file_seq": 56,
+    "advertised_archive_bytes": 341210886,
+    "license": "Korea Open Government License Type 1 (KOGL Type 1): attribution",
+    "license_url": "https://www.kogl.or.kr/recommend/recommendList.do"
+  },
+  "evaluation_period": "2019-01-01T00:00:00+09:00 through 2019-12-31T23:00:00+09:00, inclusive source hours",
+  "source_contract": "Require an interpretable rental-hour timestamp and a rental-event or rental-count measure; aggregate all and only Seoul public bicycle rentals into exactly one nonnegative citywide count per local hour. Reject ambiguous units, duplicate aggregates, missing hours, gaps, invalid dates/counts, schema changes or incomplete 2019 coverage. Ignore demographic and station attributes. Do not repair or impute. Record raw archive and derived aggregate SHA-256 before scoring.",
+  "compatibility_gate": "Confirm that the official source measures hourly citywide rentals, comparable in meaning to the UCI rental count. A different unit or unresolvable mismatch blocks scoring; do not rename a different target as validation.",
+  "forecast": "At the end of source hour t, score the count in source hour t+24. Use only complete past counts and known target-hour calendar cycles; require 168 hours of prior 2019 history and a complete 2019 target hour.",
+  "model": "Refit only the original fixed 2017-2018 training logistic pipeline and July 2018 sigmoid calibration. Use the original train-derived high-demand threshold and model settings. No 2019 fitting, threshold reset, feature changes, model selection or parameter tuning.",
+  "baselines": ["2019 latest completed hour count", "2019 same target hour one week earlier", "original 2018 training prevalence"],
+  "metrics": ["average precision", "Brier score for calibrated probability and prevalence baseline", "class support and prevalence", "precision, recall and captures under one top-10%-of-all-eligible-2019-hours retrospective budget"],
+  "reporting": "Separate local-only external-source report. Compare descriptively with original 2018 result, disclose differing publisher/collection, city-scale shift, 2019 class support and publication latency. No operational, causal, statistical-significance or future-year generalization claim.",
+  "resource_limits": {"temporary_archive_bytes": 400000000, "persistent_derived_bytes": 20971520, "uncompressed_stream_bytes": 4000000000, "network_requests": 1},
+  "release": "No raw source, derived row-level counts, or report in Git or public container. Keep the original benchmark and exploratory audit intact."
+}
