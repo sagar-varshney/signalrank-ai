@@ -147,14 +147,13 @@ el('budget').addEventListener('input', () => { el('budget-count').textContent = 
 function renderOverviewComparisons(comparisons) {
   const root = el('overview-comparison');
   const rows = comparisons.filter(item => item.name !== 'Combined · raw');
-  const maximum = Math.max(0.001, ...rows.map(item => item.average_precision));
   root.replaceChildren();
   for (const item of rows) {
     const row = node('div', '', 'comparison-line');
     if (item.name === 'Combined · calibrated') row.classList.add('is-primary');
     const track = node('span', '', 'comparison-track');
     const fill = node('span', '', 'comparison-fill');
-    fill.style.width = Math.max(1, item.average_precision / maximum * 100) + '%';
+    fill.style.width = Math.max(0, Math.min(1, item.average_precision)) * 100 + '%';
     track.append(fill);
     row.append(node('span', item.name, 'comparison-name'), track, node('strong', item.average_precision.toFixed(3), 'comparison-value'));
     root.append(row);
