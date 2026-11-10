@@ -81,6 +81,25 @@ class ExternalSourceGateTests(unittest.TestCase):
             self.assertEqual(values[date(2019, 12, 1)], 12)
             self.assertEqual(metadata['daily_file_dates']['19'], 1)
 
+    def test_markdown_export_records_blockers_without_model_metrics(self):
+        counts = [2] * external.HOURS
+        present = [True] * external.HOURS
+        present[0] = False
+        published = {external.YEAR_START + timedelta(days=i): 48 for i in range(365)}
+        published[date(2019, 1, 2)] = 49
+        report = external.summarize(counts, present, published,
+                                    {'raw_rows': 100, 'observed_hours': external.HOURS - 1, 'archive_sha256': 'pinned-archive'}, {}, external.source())
+        report.update(status='available', report_sha256='verified-report', protocol='fixed-protocol')
+        markdown = external.markdown(report)
+        self.assertIn('**Decision:** blocked', markdown)
+        self.assertIn('Observed 2019 hours: 8,759 / 8,760', markdown)
+        self.assertIn('2019-01-01T00:00:00+09:00', markdown)
+        self.assertIn('pinned-archive', markdown)
+        self.assertIn('No 2019 model performance is claimed', markdown)
+        self.assertNotIn('average precision', markdown.lower())
+        with self.assertRaises(ValueError):
+            external.markdown({**report, 'model_evaluation': {'average_precision': 0.5}})
+
     def test_public_boundary_precedes_any_resource_or_path_read(self):
         with patch('signalrank.bike_external.bikes.resource', side_effect=AssertionError('no local reads')):
             self.assertEqual(external.load(public=True)['status'], 'unavailable')

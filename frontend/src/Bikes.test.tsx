@@ -51,6 +51,7 @@ it('shows the 2019 source gate without manufacturing external model performance'
   mount();await screen.findByText('Can later data validate this model?');
   expect(await screen.findByText('361 daily totals differ.')).toBeTruthy();
   expect(screen.getByText('Evaluation blocked')).toBeTruthy();
+  expect(screen.getByRole('link',{name:'Export source-gate report'}).getAttribute('href')).toBe('/api/bikes/external/export');
   expect(screen.getByText('Source compatibility failed before model scoring.')).toBeTruthy();
   expect(screen.queryByText(/2019 average precision/i)).toBeNull();
 });

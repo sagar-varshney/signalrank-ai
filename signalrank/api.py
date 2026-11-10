@@ -16,7 +16,7 @@ from signalrank.scope import review as scope_review
 from signalrank.study import audit as study_audit
 from signalrank.bikes import load_report as load_bike_report, markdown as bike_markdown
 from signalrank.bike_audit import load as load_bike_audit
-from signalrank.bike_external import load as load_bike_external
+from signalrank.bike_external import load as load_bike_external, markdown as bike_external_markdown
 from signalrank.diagnostics import build as diagnostics
 from signalrank.uncertainty import compare_snapshots
 from signalrank.reporting import markdown
@@ -149,6 +149,15 @@ def bike_audit():
 @app.get("/api/bikes/external")
 def bike_external():
     return load_bike_external(os.environ.get("SIGNALRANK_BIKE_ROOT"), public=app.state.settings.public)
+
+
+@app.get("/api/bikes/external/export")
+def bike_external_export():
+    result = bike_external()
+    if result["status"] != "available":
+        raise HTTPException(409, result["reason"])
+    return Response(bike_external_markdown(result), media_type="text/markdown",
+                    headers={"Content-Disposition": 'attachment; filename="signalrank-2019-source-gate.md"'})
 
 
 @app.get("/api/bikes/export")

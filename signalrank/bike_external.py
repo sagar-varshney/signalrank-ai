@@ -271,6 +271,51 @@ def load(root=None, *, public=False):
         return {"status": "unavailable", "reason": "Saved external-source audit failed integrity/provenance checks."}
 
 
+def markdown(report):
+    """Render a validated, aggregate-only source-gate report for local review."""
+    if report.get("status") != "available" or report.get("model_evaluation") is not None:
+        raise ValueError("Only a verified, unscored source gate can be exported")
+    source_info, hourly, daily = report["source"], report["hourly"], report["daily"]
+    lines = [
+        "# SignalRank — 2019 Seoul external-source gate", "",
+        f"**Decision:** {report['gate'].replace('_', ' ')}", "",
+        "**Model evaluation:** Not performed. No 2019 model performance is claimed.", "",
+        report["warning"], "", "## Contract results", "",
+        f"- Hourly source rows: {hourly['raw_rows']:,}",
+        f"- Observed 2019 hours: {hourly['observed_hours']:,} / {hourly['expected_hours']:,}",
+        f"- Published daily dates: {daily['published_dates']:,} / 365",
+        f"- Reconciled daily totals: {daily['matched_dates']:,} / {daily['comparable_dates']:,}",
+        "", "### Reasons", "",
+    ]
+    lines.extend(f"- {reason}" for reason in report["reasons"])
+    lines.extend(["", "### Missing hourly periods", ""])
+    if hourly["missing_hour_spans"]:
+        lines.extend(["| First hour | Last hour | Hours |", "| --- | --- | ---: |"])
+        lines.extend(f"| {span['first']} | {span['last']} | {span['hours']} |" for span in hourly["missing_hour_spans"])
+    else:
+        lines.append("None observed.")
+    lines.extend(["", "### Published-total mismatch examples", ""])
+    if daily["mismatch_examples"]:
+        lines.extend(["| Date | Hourly use total | Daily rental total |", "| --- | ---: | ---: |"])
+        lines.extend(f"| {row['day']} | {row['hourly_use_total']:,} | {row['daily_rental_total']:,} |" for row in daily["mismatch_examples"])
+    else:
+        lines.append("None observed.")
+    lines.extend([
+        "", "## Provenance and limits", "",
+        f"- Hourly source: {source_info['catalog_url']}",
+        f"- Independent daily source: {source_info['daily_catalog_url']}",
+        f"- Publisher: {source_info['publisher']}",
+        f"- License: {source_info['license']} — {source_info['license_url']}",
+        f"- Modifications: {source_info['modifications']}",
+        f"- Official hourly archive SHA-256: {hourly['archive_sha256']}",
+        f"- Saved source-gate report SHA-256: {report['report_sha256']}",
+        f"- Protocol: {report['protocol']}", "",
+        "No government endorsement is implied. This source-use assessment is scoped; it is not legal certification.",
+        "The gate checks source compatibility before scoring. It does not establish model accuracy or operational utility.", "",
+    ])
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     action = parser.add_mutually_exclusive_group(required=True)

@@ -16475,6 +16475,12 @@ function Bn() {
 					})]
 				}) : l.data ? l.data.status === "available" ? /* @__PURE__ */ (0, b.jsxs)(b.Fragment, { children: [
 					/* @__PURE__ */ (0, b.jsx)("p", { children: l.data.warning }),
+					/* @__PURE__ */ (0, b.jsx)("a", {
+						className: "button",
+						href: "/api/bikes/external/export",
+						download: "signalrank-2019-source-gate.md",
+						children: "Export source-gate report"
+					}),
 					/* @__PURE__ */ (0, b.jsxs)("div", {
 						className: "bike-gate-stats",
 						children: [
