@@ -2,7 +2,7 @@
 
 A Python rare-event ML research workbench with a FastAPI dashboard and React/TypeScript UI. Its original fictional data supports calibrated text-plus-tabular ranking, chronological development evaluation, complete prediction explanations, delayed-label replay and fixed-schedule recovery comparisons. It does not claim real-world risk accuracy. A separately scoped real-data benchmark ranks next-day Seoul bike demand using past-only features; see [BIKE-BENCHMARK.md](BIKE-BENCHMARK.md).
 
-Overview is the default landing page. Open `#showcase` when you want the optional five-step walkthrough. The sharp-edged blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
+Overview is the default landing page. In the local profile it summarizes the verified bike benchmark separately from synthetic model scores, and labels a browser fixture as fictional. Open `#showcase` when you want the optional five-step walkthrough. The sharp-edged blue-violet interface retains Light/Dark/System modes. [DEPLOYMENT.md](DEPLOYMENT.md) describes the prepared **free-only Render** public profile; no hosted service is created by running the local demo.
 
 ### Scope before expansion
 

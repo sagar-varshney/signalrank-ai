@@ -19,11 +19,38 @@ function loadLegacy(name) {
   if (!state.profileReady) return;
   if (name === 'overview' || name === 'models') loadOnce('models', models);
   if (name === 'overview') loadOnce('history', experimentHistory);
+  if (name === 'overview' && state.profile !== 'public') loadOnce('bike-overview', loadBikeOverview);
   if (name === 'models') loadOnce('temporal', loadTemporal);
   if (name === 'data' || (state.profile !== 'public' && name === 'overview')) loadOnce('evidence', evidence);
   if (name === 'build' || (state.profile !== 'public' && name === 'overview')) loadOnce('build', refreshBuild);
   if (name === 'overview' || name === 'data') loadOnce('scope', loadScope);
   if (name === 'inference') loadOnce('contracts', loadContracts);
+}
+async function loadBikeOverview() {
+  const [report, gate] = await Promise.all([get('/api/bikes'), get('/api/bikes/external')]);
+  const root = el('bike-overview-evidence');
+  root.replaceChildren();
+  if (report.status !== 'available') {
+    root.append(node('span', 'No saved local bike benchmark is available on this machine.', 'caption'));
+  } else if (report.fixture) {
+    root.append(node('span', 'Original browser fixture · no measured real-data result.', 'caption'));
+  } else {
+    const rows = report.comparisons?.final || [];
+    const primary = rows.find(row => row.id === 'logistic');
+    const weekly = rows.find(row => row.id === 'weekly');
+    if (primary && weekly) {
+      root.append(
+        node('span', '2018 fixed test · ' + primary.count.toLocaleString() + ' hours · ' + primary.positives.toLocaleString() + ' high-demand hours', 'caption'),
+        node('strong', 'Average precision: primary logistic ' + primary.average_precision.toFixed(3) + ' · weekly baseline ' + weekly.average_precision.toFixed(3)),
+        node('span', 'Descriptive comparison only; it does not validate the KEV study.', 'caption'),
+      );
+    } else {
+      root.append(node('span', 'Saved model comparison is unavailable; inspect the full benchmark.', 'caption'));
+    }
+  }
+  if (gate.status === 'available' && gate.gate === 'blocked') {
+    root.append(node('span', '2019 external check: blocked before model scoring.', 'caption'));
+  }
 }
 async function loadScope() {
   const r = await get('/api/scope');

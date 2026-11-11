@@ -42,6 +42,7 @@ test('Overview is the landing page and sharp corners persist across themes and w
   await expect(page.getByRole('region', { name: 'Guided synthetic showcase' })).toHaveCount(0);
   await expect(page.locator('#overview-metrics .metric')).toHaveCount(4);
   await expect(page.locator('#overview-comparison .comparison-line')).toHaveCount(4);
+  await expect(page.locator('#bike-overview-evidence')).toContainText('Original browser fixture · no measured real-data result.');
   for (const theme of ['light', 'dark', 'system']) {
     await page.getByRole('combobox', { name: 'Appearance' }).selectOption(theme);
     for (const selector of ['#overview .notice', '#overview .metric', '#overview .panel', '.theme-control select', '.command-trigger']) {
@@ -54,6 +55,22 @@ test('Overview is the landing page and sharp corners persist across themes and w
   expect(await page.locator('.prediction-card, .waterfall-scroll').evaluateAll(elements => elements.every(element => getComputedStyle(element).borderRadius === '0px'))).toBe(true);
   await navigate(page, 'Guided showcase');
   await expect(page.getByRole('button', { name: /Start guided walkthrough/ })).toBeVisible();
+});
+
+test('Overview reports local real-data evidence separately from the blocked 2019 gate', async ({ page }) => {
+  await page.route(/\/api\/bikes$/, route => route.fulfill({ json: {
+    status: 'available', fixture: false, comparisons: { final: [
+      { id: 'logistic', count: 1441, positives: 388, average_precision: 0.680 },
+      { id: 'weekly', count: 1441, positives: 388, average_precision: 0.645 },
+    ] },
+  } }));
+  await page.route(/\/api\/bikes\/external$/, route => route.fulfill({ json: { status: 'available', gate: 'blocked' } }));
+  await page.goto('/#overview');
+  const evidence = page.locator('#bike-overview-evidence');
+  await expect(evidence).toContainText('2018 fixed test · 1,441 hours · 388 high-demand hours');
+  await expect(evidence).toContainText('primary logistic 0.680 · weekly baseline 0.645');
+  await expect(evidence).toContainText('2019 external check: blocked before model scoring.');
+  await expect(evidence).not.toContainText('Original browser fixture');
 });
 
 test('Prediction Studio reconstructs scores and restores a browser-local comparison', async ({ page }) => {
