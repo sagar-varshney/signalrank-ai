@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-from signalrank import bikes
+from signalrank import bikes, bike_reporting
 
 
 def fixture_rows():
@@ -80,6 +80,14 @@ class BikeTests(unittest.TestCase):
         for error in self.report["errors"]:
             self.assertAlmostEqual(error["intercept"]+sum(r["value"] for r in error["factors"]),error["logit"],places=10)
             self.assertEqual(len(error["factors"]),len(bikes.FEATURES))
+
+    def test_export_includes_absolute_support_and_review_counts(self):
+        report = {**self.report, "status": "available", "attribution": "Original fixture",
+                  "dataset_sha256": "fixture"}
+        markdown = bike_reporting.markdown(report)
+        primary = next(row for row in self.report["comparisons"]["final"] if row["id"] == "logistic")
+        self.assertIn("Hours / positives | Captured / reviewed", markdown)
+        self.assertIn(f'| final | {primary["name"]} | {primary["count"]} / {primary["positives"]} | {primary["captured"]} / {primary["budget"]} |', markdown)
 
     def test_class_deficient_partition_is_not_repaired(self):
         with self.assertRaisesRegex(ValueError,"Class-deficient"):

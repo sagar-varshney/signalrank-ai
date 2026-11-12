@@ -14,7 +14,8 @@ from signalrank.inference import BatchRequest, BatchStore, BatchBodyLimit, sampl
 from signalrank.contracts import fixture_report
 from signalrank.scope import review as scope_review
 from signalrank.study import audit as study_audit
-from signalrank.bikes import load_report as load_bike_report, markdown as bike_markdown
+from signalrank.bikes import load_report as load_bike_report
+from signalrank.bike_reporting import markdown as bike_markdown
 from signalrank.bike_audit import load as load_bike_audit
 from signalrank.bike_external import load as load_bike_external, markdown as bike_external_markdown
 from signalrank.diagnostics import build as diagnostics

@@ -16156,6 +16156,18 @@ function Bn() {
 							/* @__PURE__ */ (0, b.jsxs)("strong", { children: [f.average_precision - m.average_precision >= 0 ? "+" : "", Rn(f.average_precision - m.average_precision)] }),
 							". Descriptive difference, not a significance test."
 						]
+					}),
+					/* @__PURE__ */ (0, b.jsxs)("p", {
+						className: "caption bike-budget-note",
+						children: [
+							"At the fixed top-10% retrospective budget, the primary model captured ",
+							f.captured,
+							" high-demand hours versus ",
+							m.captured,
+							" for the weekly baseline from ",
+							f.budget,
+							" reviewed hours. This is not an operational policy."
+						]
 					})
 				]
 			}),

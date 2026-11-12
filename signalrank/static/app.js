@@ -42,7 +42,8 @@ async function loadBikeOverview() {
       root.append(
         node('span', '2018 fixed test · ' + primary.count.toLocaleString() + ' hours · ' + primary.positives.toLocaleString() + ' high-demand hours', 'caption'),
         node('strong', 'Average precision: primary logistic ' + primary.average_precision.toFixed(3) + ' · weekly baseline ' + weekly.average_precision.toFixed(3)),
-        node('span', 'Descriptive comparison only; it does not validate the KEV study.', 'caption'),
+        node('span', 'Top 10% retrospective budget: ' + primary.captured + ' vs ' + weekly.captured + ' high-demand hours captured from ' + primary.budget + ' reviewed hours.', 'caption'),
+        node('span', 'Descriptive comparison only; it does not validate the KEV study or establish operational benefit.', 'caption'),
       );
     } else {
       root.append(node('span', 'Saved model comparison is unavailable; inspect the full benchmark.', 'caption'));

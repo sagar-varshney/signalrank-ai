@@ -28,7 +28,7 @@ Dataset publication counts, archive/schema validation and source pinning may be 
 
 Stable ties follow chronological source order. For the constant-prevalence baseline, review-budget captures therefore select the earliest hours and are not a random-selection estimate. CPU limits are checked between bounded fits; they are not operating-system preemption.
 
-The [first fixed evaluation](research/seoul-benchmark-first-results-2026-11-03.md) records all candidates, support, provenance and limitations. No model winner was selected after evaluation.
+The [first fixed evaluation](research/seoul-benchmark-first-results-2026-11-03.md) records all candidates, support, provenance and limitations. The dashboard and Markdown export show absolute captures at the fixed review budget beside average precision, so ranking differences are not mistaken for proportional decision gains. No model winner was selected after evaluation.
 
 ## Exploratory subgroup audit after the first evaluation
 

@@ -60,8 +60,8 @@ test('Overview is the landing page and sharp corners persist across themes and w
 test('Overview reports local real-data evidence separately from the blocked 2019 gate', async ({ page }) => {
   await page.route(/\/api\/bikes$/, route => route.fulfill({ json: {
     status: 'available', fixture: false, comparisons: { final: [
-      { id: 'logistic', count: 1441, positives: 388, average_precision: 0.680 },
-      { id: 'weekly', count: 1441, positives: 388, average_precision: 0.645 },
+      { id: 'logistic', count: 1441, positives: 388, average_precision: 0.680, captured: 118, budget: 145 },
+      { id: 'weekly', count: 1441, positives: 388, average_precision: 0.645, captured: 117, budget: 145 },
     ] },
   } }));
   await page.route(/\/api\/bikes\/external$/, route => route.fulfill({ json: { status: 'available', gate: 'blocked' } }));
@@ -69,6 +69,7 @@ test('Overview reports local real-data evidence separately from the blocked 2019
   const evidence = page.locator('#bike-overview-evidence');
   await expect(evidence).toContainText('2018 fixed test · 1,441 hours · 388 high-demand hours');
   await expect(evidence).toContainText('primary logistic 0.680 · weekly baseline 0.645');
+  await expect(evidence).toContainText('118 vs 117 high-demand hours captured from 145 reviewed hours');
   await expect(evidence).toContainText('2019 external check: blocked before model scoring.');
   await expect(evidence).not.toContainText('Original browser fixture');
 });
