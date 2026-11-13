@@ -69,6 +69,13 @@ def main():
     assert json.loads(request("/api/inference/models")[2])["items"] == []
     assert json.loads(request("/api/dataset/records")[2])["items"] == []
     assert request("/api/dataset/records/anything")[0] == 404
+    for path in ("/api/bikes", "/api/bikes/audit", "/api/bikes/external"):
+        status, _, body = request(path)
+        value = json.loads(body)
+        assert status == 200 and set(value) == {"status", "reason"} and value["status"] == "unavailable", path
+    for path in ("/api/bikes/export", "/api/bikes/external/export"):
+        status, _, body = request(path)
+        assert status == 409 and "detail" in json.loads(body), path
     if local:
         # Only loopback/container verification may send a rejected mutation or invalid Host.
         assert request("/api/batches", method="POST")[0] == 403

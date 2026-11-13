@@ -44,7 +44,7 @@ docker stop signalrank-public-check
 
 The loopback mapping is deliberate. Open `http://127.0.0.1:8030/` for the Overview landing page, then test Light/Dark/System, Studio, recovery/decision controls and the five-step tour. Local saved examples remain local to that browser origin. Never substitute a downloaded pickle artifact.
 
-CI builds the actual Linux image, starts it with a read-only filesystem, no extra capabilities and the documented free-plan CPU/memory envelope, verifies non-root execution and excluded study/database files, runs bounded concurrent predictions and checks observed container peak memory. This is a bounded smoke test, not a capacity, availability or penetration-testing guarantee. Docker is not required for normal local development.
+CI builds the actual Linux image, starts it with a read-only filesystem, no extra capabilities and the documented free-plan CPU/memory envelope, verifies non-root execution and excluded study/database files, checks that all bike-study reads and exports remain unavailable, runs bounded concurrent predictions and checks observed container peak memory. This is a bounded smoke test, not a capacity, availability or penetration-testing guarantee. Docker is not required for normal local development.
 
 Python tests, frontend tests, both local/public Chromium suites, deterministic frontend rebuild and the container job must all be green for the chosen commit. A local browser passing is not evidence of Render deployment success.
 
