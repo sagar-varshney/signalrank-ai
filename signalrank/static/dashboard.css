@@ -57,6 +57,16 @@
 }
 
 body { background: var(--canvas); color: var(--ink); }
+button:focus-visible, a:focus-visible, summary:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+input[type=range], input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
+.year .bar span { background: var(--signal-teal); }
+.year:last-child .bar span { background: var(--control); }
+.check { background: var(--selected); color: var(--accent); }
+.pending { background: var(--raised); color: var(--muted); }
 button, input, select, textarea { font: inherit; }
 button, .button, .panel, .metric, .badge, .notice, .track-card,
 .workflow-step, input, select, textarea, dialog, .prediction-card,
