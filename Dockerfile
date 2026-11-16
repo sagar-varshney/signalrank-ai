@@ -5,7 +5,7 @@ RUN pip install --no-cache-dir uv==0.12.23
 COPY pyproject.toml uv.lock ./
 COPY signalrank/*.py ./signalrank/
 COPY deploy/synthetic-sources.json ./signalrank/sources.json
-COPY signalrank/static/*.html signalrank/static/*.css signalrank/static/*.js ./signalrank/static/
+COPY signalrank/static/*.html signalrank/static/*.css signalrank/static/*.js signalrank/static/*.svg ./signalrank/static/
 COPY signalrank/static/react/experiments.js signalrank/static/react/experiments.css signalrank/static/react/THIRD-PARTY-NOTICES.txt ./signalrank/static/react/
 RUN uv sync --locked --no-dev --python /usr/local/bin/python
 RUN /opt/venv/bin/python -m signalrank.release build --output /app/demo-artifact

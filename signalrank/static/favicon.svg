@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SignalRank">
+  <rect width="64" height="64" fill="#171c2e"/>
+  <path d="M11 50h42" fill="none" stroke="#f3f6ff" stroke-width="3"/>
+  <path d="M14 43V33h9v10zm14 0V24h9v19zm14 0V14h9v29z" fill="#a4b5ff"/>
+</svg>
