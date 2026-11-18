@@ -103,7 +103,16 @@ document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click'
   heading.tabIndex = -1;
   heading.focus();
 }));
-window.addEventListener('hashchange', () => { if (location.hash !== '#main-content') showView(location.hash.slice(1)); });
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#main-content') return;
+  const previous = document.querySelector('.view:not([hidden])')?.id;
+  showView(location.hash.slice(1));
+  const next = document.querySelector('.view:not([hidden])');
+  if (next?.id !== previous) {
+    const heading = next.querySelector('h1');
+    if (heading) { heading.tabIndex = -1; heading.focus(); }
+  }
+});
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); el('main-content').focus(); });
 // Collapsible mobile navigation; desktop always exposes every research route.
 const navigationMedia = window.matchMedia('(max-width: 700px)');
